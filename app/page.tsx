@@ -38,7 +38,7 @@ export default function Home() {
       <div className="paper" aria-hidden="true" />
 
       <div className="hand-stage" aria-hidden="true">
-        <img src="/imagine-hand-hero-v4.png" alt="" />
+        <img src="/imagine-hand-hero-v5.png" alt="" />
       </div>
 
       <div className="crystal-position"><Crystal /></div>
