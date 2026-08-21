@@ -1,27 +1,147 @@
 "use client";
 
 import { PointerEvent, useEffect, useRef, useState } from "react";
+import * as THREE from "three";
 
-function Glyph() {
-  return (
-    <span className="glyph" aria-hidden="true">
-      <i className="glyph-outer" />
-      <i className="glyph-inner" />
-      <i className="glyph-spine" />
-      <i className="glyph-seed" />
-    </span>
-  );
+function ThreeAtmosphere() {
+  const mount = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const host = mount.current;
+    if (!host) return;
+
+    const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const scene = new THREE.Scene();
+    const camera = new THREE.PerspectiveCamera(42, host.clientWidth / host.clientHeight, .1, 100);
+    camera.position.set(0, 0, 8);
+
+    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, powerPreference: "high-performance" });
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    renderer.setSize(host.clientWidth, host.clientHeight);
+    renderer.setClearColor(0x000000, 0);
+    renderer.outputColorSpace = THREE.SRGBColorSpace;
+    host.appendChild(renderer.domElement);
+
+    const dustGeometry = new THREE.BufferGeometry();
+    const dustCount = 720;
+    const positions = new Float32Array(dustCount * 3);
+    const scales = new Float32Array(dustCount);
+    for (let i = 0; i < dustCount; i += 1) {
+      const radius = 1.1 + Math.pow(Math.random(), .58) * 5.6;
+      const angle = Math.random() * Math.PI * 2;
+      positions[i * 3] = Math.cos(angle) * radius;
+      positions[i * 3 + 1] = Math.sin(angle) * radius * .58 - .7;
+      positions[i * 3 + 2] = (Math.random() - .5) * 2.8;
+      scales[i] = .4 + Math.random() * 1.2;
+    }
+    dustGeometry.setAttribute("position", new THREE.BufferAttribute(positions, 3));
+    dustGeometry.setAttribute("aScale", new THREE.BufferAttribute(scales, 1));
+    const dustMaterial = new THREE.PointsMaterial({ color: 0xc6a464, size: .018, transparent: true, opacity: .28, depthWrite: false, blending: THREE.NormalBlending });
+    const dust = new THREE.Points(dustGeometry, dustMaterial);
+    scene.add(dust);
+
+    const haloMaterial = new THREE.ShaderMaterial({
+      transparent: true,
+      depthWrite: false,
+      blending: THREE.AdditiveBlending,
+      uniforms: { uTime: { value: 0 }, uPointer: { value: new THREE.Vector2(0, 0) } },
+      vertexShader: `varying vec2 vUv; void main(){ vUv=uv; gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.0); }`,
+      fragmentShader: `
+        varying vec2 vUv;
+        uniform float uTime;
+        uniform vec2 uPointer;
+        void main(){
+          vec2 p=vUv-.5;
+          p+=uPointer*.018;
+          float d=length(p);
+          float core=smoothstep(.37,.0,d);
+          float pulse=.82+.18*sin(uTime*2.25);
+          vec3 gold=vec3(1.0,.63,.12);
+          gl_FragColor=vec4(gold,core*core*.24*pulse);
+        }
+      `,
+    });
+    const halo = new THREE.Mesh(new THREE.PlaneGeometry(4.1, 4.1), haloMaterial);
+    halo.position.set(0, -.78, -.35);
+    scene.add(halo);
+
+    const orbitGroup = new THREE.Group();
+    orbitGroup.position.set(0, -.78, 0);
+    for (let ring = 0; ring < 3; ring += 1) {
+      const geometry = new THREE.BufferGeometry();
+      const count = 70 + ring * 22;
+      const ringPositions = new Float32Array(count * 3);
+      const radius = .82 + ring * .27;
+      for (let i = 0; i < count; i += 1) {
+        const angle = (i / count) * Math.PI * 2;
+        ringPositions[i * 3] = Math.cos(angle) * radius;
+        ringPositions[i * 3 + 1] = Math.sin(angle) * radius * .6;
+        ringPositions[i * 3 + 2] = 0;
+      }
+      geometry.setAttribute("position", new THREE.BufferAttribute(ringPositions, 3));
+      const material = new THREE.PointsMaterial({ color: ring === 1 ? 0xd6a541 : 0xb9a579, size: .018, transparent: true, opacity: .14 - ring * .025, depthWrite: false });
+      const points = new THREE.Points(geometry, material);
+      points.rotation.z = ring * .3;
+      orbitGroup.add(points);
+    }
+    scene.add(orbitGroup);
+
+    const pointer = new THREE.Vector2();
+    const eased = new THREE.Vector2();
+    const onPointer = (event: globalThis.PointerEvent) => {
+      pointer.x = event.clientX / window.innerWidth * 2 - 1;
+      pointer.y = -(event.clientY / window.innerHeight * 2 - 1);
+    };
+    window.addEventListener("pointermove", onPointer, { passive: true });
+
+    const clock = new THREE.Clock();
+    let animation = 0;
+    const render = () => {
+      const time = clock.getElapsedTime();
+      eased.lerp(pointer, .035);
+      camera.position.x = eased.x * .16;
+      camera.position.y = eased.y * .1;
+      camera.lookAt(0, -.15, 0);
+      haloMaterial.uniforms.uTime.value = time;
+      haloMaterial.uniforms.uPointer.value.copy(eased);
+      dust.rotation.z = time * .004;
+      dust.rotation.y = eased.x * .025;
+      orbitGroup.rotation.z = time * .035;
+      orbitGroup.rotation.x = eased.y * .06;
+      renderer.render(scene, camera);
+      if (!reduceMotion) animation = requestAnimationFrame(render);
+    };
+    render();
+
+    const resize = () => {
+      const width = host.clientWidth;
+      const height = host.clientHeight;
+      camera.aspect = width / height;
+      camera.updateProjectionMatrix();
+      renderer.setSize(width, height);
+    };
+    window.addEventListener("resize", resize);
+
+    return () => {
+      cancelAnimationFrame(animation);
+      window.removeEventListener("pointermove", onPointer);
+      window.removeEventListener("resize", resize);
+      dustGeometry.dispose();
+      dustMaterial.dispose();
+      halo.geometry.dispose();
+      haloMaterial.dispose();
+      orbitGroup.children.forEach((child) => {
+        const points = child as THREE.Points;
+        points.geometry.dispose();
+        (points.material as THREE.Material).dispose();
+      });
+      renderer.dispose();
+      renderer.domElement.remove();
+    };
+  }, []);
+
+  return <div ref={mount} className="three-atmosphere" aria-hidden="true" />;
 }
-
-function BrandIcon({ large = false }: { large?: boolean }) {
-  return <span className={`brand-icon ${large ? "is-large" : ""}`}><Glyph /></span>;
-}
-
-const modes = [
-  { icon: "⌨", title: "Type", tone: "blue", copy: "Write your thoughts\nand spark ideas." },
-  { icon: "◉", title: "Speak", tone: "amber", copy: "Say it out loud and let\nideas come alive." },
-  { icon: "✎", title: "Draw", tone: "rose", copy: "Sketch freely and\nshape your imagination." },
-];
 
 export default function Home() {
   const root = useRef<HTMLElement>(null);
@@ -30,118 +150,46 @@ export default function Home() {
 
   useEffect(() => {
     const frame = requestAnimationFrame(() => setReady(true));
-    const observer = new IntersectionObserver(
-      (entries) => entries.forEach((entry) => entry.isIntersecting && entry.target.classList.add("visible")),
-      { threshold: 0.2 },
-    );
-    document.querySelectorAll("[data-reveal]").forEach((node) => observer.observe(node));
-    return () => { cancelAnimationFrame(frame); observer.disconnect(); };
+    return () => cancelAnimationFrame(frame);
   }, []);
 
   function trackPointer(event: PointerEvent<HTMLElement>) {
     if (!root.current) return;
     const x = event.clientX / window.innerWidth - .5;
     const y = event.clientY / window.innerHeight - .5;
-    root.current.style.setProperty("--move-x", `${x * 7}px`);
-    root.current.style.setProperty("--move-y", `${y * 5}px`);
+    root.current.style.setProperty("--hand-x", `${x * 8}px`);
+    root.current.style.setProperty("--hand-y", `${y * 6}px`);
+    root.current.style.setProperty("--logo-x", `${x * 13}px`);
+    root.current.style.setProperty("--logo-y", `${y * 10}px`);
   }
 
   function enterV1() {
     if (entering) return;
     setEntering(true);
-    window.setTimeout(() => window.location.assign("/v1"), 680);
+    window.setTimeout(() => window.location.assign("/v1"), 700);
   }
 
   return (
-    <main ref={root} className={`creation-site ${ready ? "ready" : ""} ${entering ? "entering" : ""}`} onPointerMove={trackPointer}>
-      <div className="page-grain" aria-hidden="true" />
-      <div className="entry-flash" aria-hidden="true" />
+    <main ref={root} className={`minimal-creation ${ready ? "ready" : ""} ${entering ? "entering" : ""}`} onPointerMove={trackPointer}>
+      <div className="paper-grain" aria-hidden="true" />
+      <div className="dot-field" aria-hidden="true" />
+      <ThreeAtmosphere />
 
-      <section id="product" className="hero-frame" aria-labelledby="hero-title">
-        <div className="dot-field" aria-hidden="true" />
-        <div className="creation-art" aria-hidden="true">
-          <img src="/imagine-creation-hero-v8.png" alt="" />
-        </div>
+      <div className="hands" aria-hidden="true">
+        <img src="/imagine-creation-hero-v8.png" alt="" />
+      </div>
 
-        <header className="topbar">
-          <a className="brand" href="#product" aria-label="IMAGINE home">
-            <BrandIcon />
-            <span>IMAGINE</span>
-          </a>
-          <nav aria-label="Primary navigation">
-            <a href="#modes">Product <i>⌄</i></a>
-            <a href="#gallery">Gallery</a>
-            <a href="#access">Pricing</a>
-            <a href="/v1">Docs</a>
-            <a href="#about">About</a>
-          </nav>
-          <button className="sign-in" type="button" onClick={enterV1}>Sign in</button>
-        </header>
+      <header className="hero-title">
+        <h1>IMAGINE</h1>
+        <p>A creative interface for intelligence.</p>
+      </header>
 
-        <div className="hero-heading">
-          <h1 id="hero-title">IMAGINE</h1>
-          <p>A creative interface for intelligence.</p>
-          <span className="small-sparkle" aria-hidden="true">✣</span>
-        </div>
+      <button className="floating-logo" type="button" onClick={enterV1} aria-label="Enter IMAGINE V1">
+        <span className="logo-bloom" aria-hidden="true" />
+        <span className="logo-crop"><img src="/imagine-logo-v3.png" alt="" /></span>
+      </button>
 
-        <div className="entry-copy">
-          <button className="try-button" type="button" onClick={enterV1}>Try V1 <span>→</span></button>
-          <p>Click to enter</p>
-        </div>
-
-        <button className="core-logo" type="button" onClick={enterV1} aria-label="Enter IMAGINE V1">
-          <span className="core-aura" aria-hidden="true" />
-          <BrandIcon large />
-          <span className="core-orbit" aria-hidden="true" />
-        </button>
-
-        <span className="sparkle sparkle-left" aria-hidden="true">✦</span>
-        <span className="sparkle sparkle-right" aria-hidden="true">✧</span>
-
-        <div id="modes" className="mode-row">
-          {modes.map((mode) => (
-            <button className={`mode mode-${mode.tone}`} type="button" key={mode.title} onClick={enterV1}>
-              <span className="mode-icon" aria-hidden="true">{mode.icon}</span>
-              <span className="mode-text"><strong>{mode.title}</strong><small>{mode.copy}</small></span>
-            </button>
-          ))}
-        </div>
-
-        <a className="explore-pill" href="#gallery">Scroll to explore <span>⌄</span></a>
-      </section>
-
-      <section id="gallery" className="gallery-section content-section">
-        <div className="section-label" data-reveal><span>01</span> Ways to imagine</div>
-        <div className="gallery-copy" data-reveal>
-          <p>One interface. Any starting point.</p>
-          <h2>Begin with a sentence,<br />a voice, or a line.</h2>
-        </div>
-        <div className="gallery-rail" data-reveal>
-          <article><span>Type</span><p>Turn language into living creative objects.</p></article>
-          <article><span>Speak</span><p>Think out loud and let the interface follow.</p></article>
-          <article><span>Draw</span><p>Give form to ideas before words arrive.</p></article>
-        </div>
-      </section>
-
-      <section id="access" className="access-section content-section">
-        <div className="section-label" data-reveal><span>02</span> First access</div>
-        <div className="access-copy" data-reveal>
-          <p>V1 / Early creators</p>
-          <h2>Start where your imagination starts.</h2>
-          <button type="button" onClick={enterV1}>Enter V1 <span>→</span></button>
-        </div>
-      </section>
-
-      <section id="about" className="about-section content-section">
-        <div className="section-label" data-reveal><span>03</span> About</div>
-        <div className="about-copy" data-reveal>
-          <p>Built close to the source</p>
-          <h2>Two brothers making the future of imagination.</h2>
-        </div>
-        <p className="about-note" data-reveal>One asking what could exist. The other asking how to make it real. IMAGINE is that conversation made into an interface.</p>
-      </section>
-
-      <footer className="site-footer"><span>IMAGINE © 2026</span><a href="#product">Back to top ↑</a></footer>
+      <div className="entry-veil" aria-hidden="true" />
     </main>
   );
 }
