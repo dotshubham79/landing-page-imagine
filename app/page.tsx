@@ -184,39 +184,16 @@ function ThreeLogo() {
     glow.position.z = -.3;
     group.add(glow);
 
-    const shape = new THREE.Shape();
-    const width = 2.15;
-    const height = 2.25;
-    const radius = .52;
-    const left = -width / 2;
-    const bottom = -height / 2;
-    shape.moveTo(left + radius, bottom);
-    shape.lineTo(left + width - radius, bottom);
-    shape.quadraticCurveTo(left + width, bottom, left + width, bottom + radius);
-    shape.lineTo(left + width, bottom + height - radius);
-    shape.quadraticCurveTo(left + width, bottom + height, left + width - radius, bottom + height);
-    shape.lineTo(left + radius, bottom + height);
-    shape.quadraticCurveTo(left, bottom + height, left, bottom + height - radius);
-    shape.lineTo(left, bottom + radius);
-    shape.quadraticCurveTo(left, bottom, left + radius, bottom);
-
-    const geometry = new THREE.ShapeGeometry(shape, 8);
-    const shapePositions = geometry.getAttribute("position");
-    const shapeUvs = geometry.getAttribute("uv");
-    for (let index = 0; index < shapePositions.count; index += 1) {
-      shapeUvs.setXY(
-        index,
-        (shapePositions.getX(index) - left) / width,
-        (shapePositions.getY(index) - bottom) / height,
-      );
-    }
-    shapeUvs.needsUpdate = true;
-    const texture = new THREE.TextureLoader().load("/imagine-logo-v3.png");
+    const geometry = new THREE.PlaneGeometry(2.7, 2.7, 12, 12);
+    const texture = new THREE.TextureLoader().load("/imagine-logo-center-v5.png");
     texture.colorSpace = THREE.SRGBColorSpace;
     texture.wrapS = texture.wrapT = THREE.ClampToEdgeWrapping;
-    texture.repeat.set(84 / 120, 90 / 120);
-    texture.offset.set(29 / 120, 10 / 120);
-    const material = new THREE.MeshStandardMaterial({ map: texture, transparent: true, roughness: .28, metalness: .06 });
+    const material = new THREE.MeshBasicMaterial({
+      map: texture,
+      transparent: true,
+      alphaTest: .005,
+      toneMapped: false,
+    });
     const mesh = new THREE.Mesh(geometry, material);
     group.add(mesh);
 

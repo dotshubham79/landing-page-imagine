@@ -45,7 +45,7 @@ button { color: inherit; font: inherit; }
 .hero-title p { margin: 8px 0 0; color: var(--muted-ink); font: 400 clamp(17px,1.45vw,23px)/1 var(--serif); letter-spacing: -.012em; opacity: 0; transform: translateY(13px); transition: opacity .8s ease .76s,transform .9s ease .76s; }
 .ready .hero-title h1,.ready .hero-title p { opacity: 1; transform: none; }
 
-.floating-logo { position: absolute; z-index: 8; left: 50%; top: 50%; width: 140px; height: 140px; display: grid; place-items: center; padding: 0; border: 0; border-radius: 50%; background: transparent; cursor: pointer; opacity: 0; transform: translate(calc(-50% + var(--logo-x)),calc(-50% + var(--logo-y))) scale(.72); transition: opacity .75s ease 1.05s,transform .6s ease-out,filter .3s ease; }
+.floating-logo { position: absolute; z-index: 8; left: 50%; top: 50%; width: 154px; height: 154px; display: grid; place-items: center; padding: 0; border: 0; border-radius: 50%; background: transparent; cursor: pointer; opacity: 0; transform: translate(calc(-50% + var(--logo-x)),calc(-50% + var(--logo-y))) scale(.72); transition: opacity .75s ease 1.05s,transform .6s ease-out,filter .3s ease; }
 .ready .floating-logo { opacity: 1; transform: translate(calc(-50% + var(--logo-x)),calc(-50% + var(--logo-y))) scale(1); }
 .three-logo { width: 100%; height: 100%; transition: transform .35s cubic-bezier(.16,1,.3,1),filter .3s ease; filter: drop-shadow(0 16px 18px rgba(164,102,4,.16)); }
 .three-logo canvas { width: 100%; height: 100%; display: block; }
