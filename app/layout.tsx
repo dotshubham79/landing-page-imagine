@@ -9,22 +9,22 @@ export async function generateMetadata(): Promise<Metadata> {
   const origin = `${protocol}://${host}`;
 
   return {
-    title: "IMAGINE — A creative interface for intelligence",
-    description: "Here, your output is intelligent. Discover a creative interface for human–AI interaction.",
+    title: "IMAGINE — Where imagination becomes intelligence",
+    description: "A new creative interface where human imagination becomes intelligence.",
     applicationName: "IMAGINE",
     metadataBase: new URL(origin),
     keywords: ["IMAGINE", "real-time creation", "persistent objects", "creative intelligence"],
     openGraph: {
-      title: "IMAGINE — A creative interface for intelligence",
-      description: "Here, your output is intelligent. Discover a creative interface for human–AI interaction.",
+      title: "IMAGINE — Where imagination becomes intelligence",
+      description: "A new creative interface where human imagination becomes intelligence.",
       type: "website",
       url: origin,
-      images: [{ url: `${origin}/og.png`, width: 1672, height: 941, alt: "IMAGINE — A creative interface for intelligence." }],
+      images: [{ url: `${origin}/og.png`, width: 1672, height: 941, alt: "IMAGINE — Where imagination becomes intelligence." }],
     },
     twitter: {
       card: "summary_large_image",
-      title: "IMAGINE — A creative interface for intelligence",
-      description: "Here, your output is intelligent. Discover a creative interface for human–AI interaction.",
+      title: "IMAGINE — Where imagination becomes intelligence",
+      description: "A new creative interface where human imagination becomes intelligence.",
       images: [`${origin}/og.png`],
     },
   };
