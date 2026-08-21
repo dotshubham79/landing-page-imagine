@@ -19,13 +19,13 @@ export async function generateMetadata(): Promise<Metadata> {
       description: "Here, your output is intelligent. Discover a creative interface for human–AI interaction.",
       type: "website",
       url: origin,
-      images: [{ url: `${origin}/og-imagine-minimal-v3.png`, width: 1672, height: 941, alt: "IMAGINE — A creative interface for AI, with a Renaissance engraved hand holding the IMAGINE mark." }],
+      images: [{ url: `${origin}/imagine-hand-hero-v4.png`, width: 1672, height: 941, alt: "IMAGINE — A creative interface for AI, represented by an artistic biomechanical hand." }],
     },
     twitter: {
       card: "summary_large_image",
       title: "IMAGINE — A creative interface for intelligence",
       description: "Here, your output is intelligent. Discover a creative interface for human–AI interaction.",
-      images: [`${origin}/og-imagine-minimal-v3.png`],
+      images: [`${origin}/imagine-hand-hero-v4.png`],
     },
   };
 }

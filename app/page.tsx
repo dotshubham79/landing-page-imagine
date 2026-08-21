@@ -7,7 +7,6 @@ const V1_HREF = "/v1";
 function Crystal() {
   return (
     <a className="crystal" href={V1_HREF} aria-label="Enter IMAGINE V1">
-      <span className="crystal-ring" aria-hidden="true" />
       <span className="crystal-glow" aria-hidden="true" />
       <span className="crystal-mark" aria-hidden="true">
         <img src="/imagine-logo-v3.png" alt="" />
@@ -39,7 +38,7 @@ export default function Home() {
       <div className="paper" aria-hidden="true" />
 
       <div className="hand-stage" aria-hidden="true">
-        <img src="/imagine-hand-hero-v3.png" alt="" />
+        <img src="/imagine-hand-hero-v4.png" alt="" />
       </div>
 
       <div className="crystal-position"><Crystal /></div>
