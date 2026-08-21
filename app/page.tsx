@@ -110,8 +110,8 @@ export default function Home() {
         </header>
 
         <div className="figure-stage" aria-hidden="true">
-          <img className="figure-art" src="/imagine-figure-hero.png" alt="" />
-          <img className="figure-echo" src="/imagine-figure-hero.png" alt="" />
+          <img className="figure-art" src="/imagine-vitruvian-hero-v2.png" alt="" />
+          <img className="figure-echo" src="/imagine-vitruvian-hero-v2.png" alt="" />
           <span className="figure-breath" />
         </div>
 

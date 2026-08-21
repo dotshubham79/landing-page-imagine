@@ -61,7 +61,7 @@ button, a { -webkit-tap-highlight-color: transparent; }
 .construction-b { right: -9vw; bottom: -18vw; width: 48vw; height: 48vw; border-color: rgba(218,170,70,.2); }
 .construction-b i:first-child { top: 11%; left: 11%; }.construction-b i:last-child { top: 49%; left: -3px; }
 
-.crystal-position { position: absolute; z-index: 8; left: 41.8%; top: 44.3%; width: 1px; height: 1px; transform: translate(var(--parallax-x),var(--parallax-y)); opacity: 0; transition: opacity .65s ease 3s, transform 650ms cubic-bezier(.2,.8,.2,1); }
+.crystal-position { position: absolute; z-index: 8; left: 32.5%; top: 50.5%; width: 1px; height: 1px; transform: translate(var(--parallax-x),var(--parallax-y)); opacity: 0; transition: opacity .65s ease 3s, transform 650ms cubic-bezier(.2,.8,.2,1); }
 .is-ready .crystal-position { opacity: 1; }
 .crystal-cta { position: absolute; width: 106px; height: 106px; display: grid; place-items: center; transform: translate(-50%,-50%); outline: none; }
 .crystal-body { position: relative; z-index: 3; width: 78px; height: 78px; display: grid; place-items: center; overflow: hidden; border: 1px solid rgba(255,255,255,.78); border-radius: 20px 25px 18px 26px; background: linear-gradient(135deg, rgba(255,244,195,.92), rgba(228,156,25,.68) 46%, rgba(252,214,109,.92)); box-shadow: 0 12px 28px rgba(93,64,5,.22), 0 0 35px rgba(245,186,52,.35), inset 10px 10px 18px rgba(255,255,255,.55), inset -8px -10px 18px rgba(101,68,9,.2); transform: rotate(45deg); animation: crystalFloat 5.2s ease-in-out 4s infinite; transition: box-shadow 350ms ease, filter 350ms ease; }
@@ -148,7 +148,7 @@ button, a { -webkit-tap-highlight-color: transparent; }
   .hero { min-height: 920px; }
   .figure-stage { top: 48px; height: 69%; }
   .figure-art, .figure-echo { width: 128%; left: -23%; object-fit: cover; object-position: 62% center; }
-  .crystal-position { left: 35.5%; top: 37%; }
+  .crystal-position { left: 30%; top: 42%; }
   .hero-copy { width: 58vw; bottom: 78px; }
   .about-intro { grid-template-columns: 1fr 2.2fr; }.about-intro h2 { grid-column: 2; }.about-lede { grid-column: 2; max-width: 560px; }
   .founder-gallery { height: 720px; }.photo-childhood .photo-frame { height: 440px; }.photo-now .photo-frame { height: 450px; }
