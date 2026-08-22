@@ -163,8 +163,58 @@ function ThreeAtmosphere() {
       return { geometry, material };
     };
 
-    const divineStream = createEnergyStream(motion.particles.divine, motion.particles.countPerStream, 3.7, 1, new THREE.Vector3(), .19, -.075, THREE.AdditiveBlending);
-    const humanStream = createEnergyStream(motion.particles.human, motion.particles.countPerStream, 3.5, .82, new THREE.Vector3(), .175, .07, THREE.NormalBlending);
+    const divineOrigin = new THREE.Vector3();
+    const humanOrigin = new THREE.Vector3();
+    const divineStream = createEnergyStream(motion.particles.divine, motion.particles.countPerStream, 3.7, 1, divineOrigin, .19, -.075, THREE.AdditiveBlending);
+    const humanStream = createEnergyStream(motion.particles.human, motion.particles.countPerStream, 3.5, .82, humanOrigin, .175, .07, THREE.NormalBlending);
+
+    const coreCanvas = document.createElement("canvas");
+    coreCanvas.width = 64;
+    coreCanvas.height = 64;
+    const coreContext = coreCanvas.getContext("2d");
+    if (coreContext) {
+      const coreGradient = coreContext.createRadialGradient(32, 32, 0, 32, 32, 32);
+      coreGradient.addColorStop(0, "rgba(255,255,255,1)");
+      coreGradient.addColorStop(.18, "rgba(255,255,255,.98)");
+      coreGradient.addColorStop(.58, "rgba(255,255,255,.44)");
+      coreGradient.addColorStop(1, "rgba(255,255,255,0)");
+      coreContext.fillStyle = coreGradient;
+      coreContext.fillRect(0, 0, 64, 64);
+    }
+    const coreTexture = new THREE.CanvasTexture(coreCanvas);
+    const createVisibleCore = (palette: string[], count: number, size: number) => {
+      const geometry = new THREE.BufferGeometry();
+      const corePositions = new Float32Array(count * 3);
+      const coreColors = new Float32Array(count * 3);
+      const seeds = new Float32Array(count);
+      const drift = new Float32Array(count);
+      for (let i = 0; i < count; i += 1) {
+        seeds[i] = Math.random();
+        drift[i] = .035 + Math.random() * .085;
+        const color = new THREE.Color(palette[i % palette.length]);
+        coreColors[i * 3] = color.r;
+        coreColors[i * 3 + 1] = color.g;
+        coreColors[i * 3 + 2] = color.b;
+      }
+      geometry.setAttribute("position", new THREE.BufferAttribute(corePositions, 3));
+      geometry.setAttribute("color", new THREE.BufferAttribute(coreColors, 3));
+      const material = new THREE.PointsMaterial({
+        size,
+        map: coreTexture,
+        vertexColors: true,
+        transparent: true,
+        opacity: 0,
+        depthWrite: false,
+        blending: THREE.NormalBlending,
+        sizeAttenuation: true,
+      });
+      const points = new THREE.Points(geometry, material);
+      points.frustumCulled = false;
+      scene.add(points);
+      return { geometry, material, seeds, drift, count };
+    };
+    const divineCore = createVisibleCore(["#159ed7", "#45ccff", "#b9f2ff", "#ffffff"], 380, .075);
+    const humanCore = createVisibleCore(["#ff7214", "#f7a92f", "#ffd65e", "#fff0ad"], 380, .078);
 
     const particlePhase = { emission: reduceMotion ? 1 : 0, mix: reduceMotion ? 1 : 0 };
     const particleTimeline = reduceMotion ? null : gsap.timeline()
@@ -177,8 +227,8 @@ function ThreeAtmosphere() {
       return new THREE.Vector3((x - .5) * visibleWidth, (.5 - y) * visibleHeight, 0);
     };
     const alignStreamsToFingertips = () => {
-      divineStream.material.uniforms.uOrigin.value.copy(viewportToWorld(.565, .415));
-      humanStream.material.uniforms.uOrigin.value.copy(viewportToWorld(.425, .505));
+      divineOrigin.copy(viewportToWorld(.565, .415));
+      humanOrigin.copy(viewportToWorld(.425, .505));
     };
     alignStreamsToFingertips();
 
@@ -235,6 +285,30 @@ function ThreeAtmosphere() {
       humanStream.material.uniforms.uMix.value = particlePhase.mix;
       divineStream.material.uniforms.uPointer.value.copy(eased);
       humanStream.material.uniforms.uPointer.value.copy(eased);
+      const updateVisibleCore = (
+        stream: typeof divineCore,
+        origin: THREE.Vector3,
+        speed: number,
+        bendDirection: number,
+      ) => {
+        const attribute = stream.geometry.getAttribute("position") as THREE.BufferAttribute;
+        stream.material.opacity = particlePhase.emission * .96;
+        for (let i = 0; i < stream.count; i += 1) {
+          const progress = (stream.seeds[i] + time * speed) % 1;
+          const easedProgress = progress * progress * (3 - 2 * progress);
+          const travel = easedProgress * (.28 + particlePhase.mix * .72);
+          const envelope = 1 - progress;
+          attribute.setXYZ(
+            i,
+            origin.x * (1 - travel),
+            origin.y * (1 - travel) + Math.sin(progress * Math.PI * 4 + i * .71) * stream.drift[i] * envelope + Math.sin(progress * Math.PI) * bendDirection,
+            Math.sin(i * 1.37 + time) * .055 * envelope,
+          );
+        }
+        attribute.needsUpdate = true;
+      };
+      updateVisibleCore(divineCore, divineOrigin, .235, -.045);
+      updateVisibleCore(humanCore, humanOrigin, .215, .045);
       renderer.render(scene, camera);
       if (!reduceMotion) animation = requestAnimationFrame(render);
     };
@@ -261,6 +335,11 @@ function ThreeAtmosphere() {
       divineStream.material.dispose();
       humanStream.geometry.dispose();
       humanStream.material.dispose();
+      divineCore.geometry.dispose();
+      divineCore.material.dispose();
+      humanCore.geometry.dispose();
+      humanCore.material.dispose();
+      coreTexture.dispose();
       halo.geometry.dispose();
       haloMaterial.dispose();
       renderer.dispose();
