@@ -41,28 +41,84 @@ function ThreeAtmosphere() {
     const dust = new THREE.Points(dustGeometry, dustMaterial);
     scene.add(dust);
 
-    const sparkleCanvas = document.createElement("canvas");
-    sparkleCanvas.width = 64;
-    sparkleCanvas.height = 64;
-    const sparkleContext = sparkleCanvas.getContext("2d");
-    if (sparkleContext) {
-      const gradient = sparkleContext.createRadialGradient(32, 32, 0, 32, 32, 32);
-      gradient.addColorStop(0, "rgba(255,255,255,1)");
-      gradient.addColorStop(.2, "rgba(255,255,255,.95)");
-      gradient.addColorStop(1, "rgba(255,255,255,0)");
-      sparkleContext.fillStyle = gradient;
-      sparkleContext.fillRect(0, 0, 64, 64);
-    }
-    const sparkleTexture = new THREE.CanvasTexture(sparkleCanvas);
-    const createEnergyStream = (palette: number[], count: number, size: number, opacity: number) => {
+    const streamVertexShader = `
+      attribute float aSeed;
+      attribute float aSize;
+      attribute vec3 aOffset;
+      attribute vec3 color;
+      uniform float uTime;
+      uniform float uSpeed;
+      uniform float uBend;
+      uniform vec3 uOrigin;
+      varying vec3 vColor;
+      varying float vAlpha;
+
+      float noiseField(vec3 p, float seed) {
+        float broad = sin(dot(p, vec3(1.27, 1.71, 2.13)) + seed);
+        float detail = sin(dot(p, vec3(2.43, -1.19, 1.53)) - seed * 1.73);
+        return broad + detail * .46;
+      }
+
+      vec3 potential(vec3 p) {
+        return vec3(
+          noiseField(p, 2.1),
+          noiseField(p.yzx, 13.7),
+          noiseField(p.zxy, 29.3)
+        );
+      }
+
+      vec3 curlNoise(vec3 p) {
+        float e = .085;
+        vec3 dx = (potential(p + vec3(e, 0., 0.)) - potential(p - vec3(e, 0., 0.))) / (2. * e);
+        vec3 dy = (potential(p + vec3(0., e, 0.)) - potential(p - vec3(0., e, 0.))) / (2. * e);
+        vec3 dz = (potential(p + vec3(0., 0., e)) - potential(p - vec3(0., 0., e))) / (2. * e);
+        return normalize(vec3(dy.z - dz.y, dz.x - dx.z, dx.y - dy.x) + vec3(.0001));
+      }
+
+      void main() {
+        float progress = fract(aSeed + uTime * uSpeed);
+        float eased = progress * progress * (3. - 2. * progress);
+        float life = sin(progress * 3.14159265);
+        vec3 base = mix(uOrigin, vec3(0.), eased);
+        vec3 fieldPosition = base * 1.8 + aOffset * 2.5 + vec3(uTime * .14);
+        vec3 turbulence = curlNoise(fieldPosition);
+        vec3 position = base;
+        position += aOffset * (1. - eased) * .34;
+        position += turbulence * (.035 + life * .22);
+        position.y += uBend * life;
+
+        vColor = color;
+        vAlpha = smoothstep(0., .08, progress) * (1. - smoothstep(.76, 1., progress));
+        vec4 modelViewPosition = modelViewMatrix * vec4(position, 1.);
+        gl_Position = projectionMatrix * modelViewPosition;
+        gl_PointSize = aSize * (8. / -modelViewPosition.z) * (.72 + life * .5);
+      }
+    `;
+    const streamFragmentShader = `
+      varying vec3 vColor;
+      varying float vAlpha;
+      uniform float uOpacity;
+      void main() {
+        float distanceToCenter = length(gl_PointCoord - .5) * 2.;
+        float haze = smoothstep(1., 0., distanceToCenter);
+        float core = smoothstep(.34, 0., distanceToCenter);
+        gl_FragColor = vec4(vColor, (haze * .55 + core * .75) * vAlpha * uOpacity);
+      }
+    `;
+
+    const createEnergyStream = (palette: number[], count: number, size: number, opacity: number, origin: THREE.Vector3, speed: number, bend: number) => {
       const geometry = new THREE.BufferGeometry();
       const streamPositions = new Float32Array(count * 3);
       const streamColors = new Float32Array(count * 3);
       const seeds = new Float32Array(count);
-      const wiggles = new Float32Array(count);
+      const sizes = new Float32Array(count);
+      const offsets = new Float32Array(count * 3);
       for (let i = 0; i < count; i += 1) {
         seeds[i] = Math.random();
-        wiggles[i] = .045 + Math.random() * .16;
+        sizes[i] = size * (.55 + Math.random() * .9);
+        offsets[i * 3] = (Math.random() - .5) * .46;
+        offsets[i * 3 + 1] = (Math.random() - .5) * .46;
+        offsets[i * 3 + 2] = (Math.random() - .5) * .5;
         const color = new THREE.Color(palette[i % palette.length]);
         streamColors[i * 3] = color.r;
         streamColors[i * 3 + 1] = color.g;
@@ -70,22 +126,32 @@ function ThreeAtmosphere() {
       }
       geometry.setAttribute("position", new THREE.BufferAttribute(streamPositions, 3));
       geometry.setAttribute("color", new THREE.BufferAttribute(streamColors, 3));
-      const material = new THREE.PointsMaterial({
-        size,
-        map: sparkleTexture,
+      geometry.setAttribute("aSeed", new THREE.BufferAttribute(seeds, 1));
+      geometry.setAttribute("aSize", new THREE.BufferAttribute(sizes, 1));
+      geometry.setAttribute("aOffset", new THREE.BufferAttribute(offsets, 3));
+      const material = new THREE.ShaderMaterial({
+        uniforms: {
+          uTime: { value: 0 },
+          uSpeed: { value: speed },
+          uBend: { value: bend },
+          uOrigin: { value: origin },
+          uOpacity: { value: opacity },
+        },
+        vertexShader: streamVertexShader,
+        fragmentShader: streamFragmentShader,
         vertexColors: true,
         transparent: true,
-        opacity,
         depthWrite: false,
         blending: THREE.AdditiveBlending,
       });
       const points = new THREE.Points(geometry, material);
+      points.frustumCulled = false;
       scene.add(points);
-      return { geometry, material, seeds, wiggles, count };
+      return { geometry, material };
     };
 
-    const divineStream = createEnergyStream([0xffffff, 0xc8f5ff, 0x79d9ff], 72, .072, .9);
-    const humanStream = createEnergyStream([0xffd36c, 0xf7a92f, 0xff7a21], 72, .078, .86);
+    const divineStream = createEnergyStream([0xffffff, 0xc8f5ff, 0x79d9ff], 900, 3.4, .9, new THREE.Vector3(2.12, .46, 0), .16, -.11);
+    const humanStream = createEnergyStream([0xffd36c, 0xf7a92f, 0xff7a21], 900, 3.7, .86, new THREE.Vector3(-2.12, -.38, 0), .145, .1);
 
     const haloMaterial = new THREE.ShaderMaterial({
       transparent: true,
@@ -155,30 +221,8 @@ function ThreeAtmosphere() {
       dust.rotation.y = eased.x * .025;
       orbitGroup.rotation.z = time * .035;
       orbitGroup.rotation.x = eased.y * .06;
-      const updateStream = (
-        stream: typeof divineStream,
-        originX: number,
-        originY: number,
-        speed: number,
-        bend: number,
-      ) => {
-        const attribute = stream.geometry.getAttribute("position") as THREE.BufferAttribute;
-        for (let i = 0; i < stream.count; i += 1) {
-          const progress = (stream.seeds[i] + time * speed) % 1;
-          const easedProgress = progress * progress * (3 - 2 * progress);
-          const envelope = 1 - progress;
-          attribute.setXYZ(
-            i,
-            originX * envelope,
-            originY * envelope + Math.sin(progress * Math.PI) * bend + Math.sin(progress * Math.PI * 4 + i) * stream.wiggles[i] * envelope,
-            Math.sin(i * 1.91) * .1 * envelope,
-          );
-          if (easedProgress > .94) attribute.setZ(i, 0);
-        }
-        attribute.needsUpdate = true;
-      };
-      updateStream(divineStream, 2.12, .46, .16, -.11);
-      updateStream(humanStream, -2.12, -.38, .145, .1);
+      divineStream.material.uniforms.uTime.value = time;
+      humanStream.material.uniforms.uTime.value = time;
       renderer.render(scene, camera);
       if (!reduceMotion) animation = requestAnimationFrame(render);
     };
@@ -203,7 +247,6 @@ function ThreeAtmosphere() {
       divineStream.material.dispose();
       humanStream.geometry.dispose();
       humanStream.material.dispose();
-      sparkleTexture.dispose();
       halo.geometry.dispose();
       haloMaterial.dispose();
       orbitGroup.children.forEach((child) => {
