@@ -944,7 +944,12 @@ export default function Home() {
           <span aria-hidden="true">&#8592;</span> Back to IMAGINE
         </button>
         <div className="team-copy">
-          <p className="team-statement">Two brothers driving the interaction with AI.</p>
+          <h2>Two brothers building a new way to interact with intelligence.</h2>
+          <div className="team-roles">
+            <p><strong>Shubham</strong> is the creative force behind IMAGINE.</p>
+            <p><strong>Binayak</strong> is the engineering force behind the engine.</p>
+          </div>
+          <p className="team-manifesto">Together, we&apos;re rethinking how humans interact with AI, moving from static answers toward intelligence you can see, shape, and interact with.</p>
         </div>
       </section>
 
