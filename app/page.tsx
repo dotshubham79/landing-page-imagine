@@ -362,6 +362,153 @@ function ThreeAtmosphere() {
   return <div ref={mount} className="three-atmosphere" aria-hidden="true" />;
 }
 
+function FingertipParticles() {
+  const mount = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const host = mount.current;
+    if (!host) return;
+
+    const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const scene = new THREE.Scene();
+    const camera = new THREE.PerspectiveCamera(50, host.clientWidth / host.clientHeight, .1, 100);
+    camera.position.z = 6;
+
+    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, powerPreference: "high-performance" });
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    renderer.setSize(host.clientWidth, host.clientHeight);
+    renderer.setClearColor(0x000000, 0);
+    renderer.outputColorSpace = THREE.SRGBColorSpace;
+    host.appendChild(renderer.domElement);
+
+    const particleCount = 260;
+    const geometry = new THREE.BufferGeometry();
+    const positions = new Float32Array(particleCount * 3);
+    const colors = new Float32Array(particleCount * 3);
+    const seeds = new Float32Array(particleCount);
+    const spread = new Float32Array(particleCount);
+    const warm = [new THREE.Color(0xff8a1f), new THREE.Color(0xffaa33), new THREE.Color(0xffd56a)];
+    const cool = [new THREE.Color(0x43cfff), new THREE.Color(0x88e1ff), new THREE.Color(0xe8fbff)];
+    for (let i = 0; i < particleCount; i += 1) {
+      seeds[i] = Math.random();
+      spread[i] = .025 + Math.random() * .075;
+      const palette = i % 2 === 0 ? cool : warm;
+      const color = palette[i % palette.length];
+      colors[i * 3] = color.r;
+      colors[i * 3 + 1] = color.g;
+      colors[i * 3 + 2] = color.b;
+    }
+    geometry.setAttribute("position", new THREE.BufferAttribute(positions, 3));
+    geometry.setAttribute("color", new THREE.BufferAttribute(colors, 3));
+
+    const textureCanvas = document.createElement("canvas");
+    textureCanvas.width = 64;
+    textureCanvas.height = 64;
+    const textureContext = textureCanvas.getContext("2d");
+    if (textureContext) {
+      const gradient = textureContext.createRadialGradient(32, 32, 0, 32, 32, 32);
+      gradient.addColorStop(0, "rgba(255,255,255,1)");
+      gradient.addColorStop(.3, "rgba(255,255,255,.9)");
+      gradient.addColorStop(1, "rgba(255,255,255,0)");
+      textureContext.fillStyle = gradient;
+      textureContext.fillRect(0, 0, 64, 64);
+    }
+    const texture = new THREE.CanvasTexture(textureCanvas);
+    const material = new THREE.PointsMaterial({
+      size: .075,
+      vertexColors: true,
+      map: texture,
+      transparent: true,
+      opacity: .96,
+      blending: THREE.AdditiveBlending,
+      depthWrite: false,
+      sizeAttenuation: true,
+    });
+    const particles = new THREE.Points(geometry, material);
+    particles.frustumCulled = false;
+    scene.add(particles);
+
+    const divineOrigin = new THREE.Vector3();
+    const humanOrigin = new THREE.Vector3();
+    const viewportToWorld = (x: number, y: number) => {
+      const visibleHeight = 2 * Math.tan(THREE.MathUtils.degToRad(camera.fov / 2)) * camera.position.z;
+      const visibleWidth = visibleHeight * camera.aspect;
+      return new THREE.Vector3((x - .5) * visibleWidth, (.5 - y) * visibleHeight, 0);
+    };
+    const trackFingertips = () => {
+      const hostBounds = host.getBoundingClientRect();
+      const read = (selector: string, fallbackX: number, fallbackY: number) => {
+        const node = document.querySelector<HTMLElement>(selector);
+        if (!node || !hostBounds.width || !hostBounds.height) return viewportToWorld(fallbackX, fallbackY);
+        const bounds = node.getBoundingClientRect();
+        return viewportToWorld(
+          (bounds.left + bounds.width / 2 - hostBounds.left) / hostBounds.width,
+          (bounds.top + bounds.height / 2 - hostBounds.top) / hostBounds.height,
+        );
+      };
+      divineOrigin.copy(read("[data-fingertip='divine']", .565, .415));
+      humanOrigin.copy(read("[data-fingertip='human']", .425, .505));
+    };
+
+    const pointer = new THREE.Vector2();
+    const easedPointer = new THREE.Vector2();
+    const onPointerMove = (event: globalThis.PointerEvent) => {
+      pointer.x = event.clientX / window.innerWidth * 2 - 1;
+      pointer.y = -(event.clientY / window.innerHeight * 2 - 1);
+    };
+    window.addEventListener("pointermove", onPointerMove, { passive: true });
+
+    const clock = new THREE.Clock();
+    let animation = 0;
+    const render = () => {
+      const time = clock.getElapsedTime();
+      trackFingertips();
+      easedPointer.lerp(pointer, .05);
+      camera.position.x = easedPointer.x * .12;
+      camera.position.y = easedPointer.y * .08;
+      camera.lookAt(0, 0, 0);
+
+      const attribute = geometry.getAttribute("position") as THREE.BufferAttribute;
+      for (let i = 0; i < particleCount; i += 1) {
+        const progress = (seeds[i] + time * .22) % 1;
+        const easedProgress = progress * progress * (3 - 2 * progress);
+        const origin = i % 2 === 0 ? divineOrigin : humanOrigin;
+        const envelope = 1 - progress;
+        attribute.setXYZ(
+          i,
+          origin.x * (1 - easedProgress) + Math.sin(time * 2.6 + i) * spread[i] * .24 * envelope,
+          origin.y * (1 - easedProgress) + Math.sin(time * 3.1 + i * .73) * spread[i] * envelope,
+          Math.cos(time * 2.2 + i * .41) * spread[i] * .7 * envelope,
+        );
+      }
+      attribute.needsUpdate = true;
+      renderer.render(scene, camera);
+      if (!reduceMotion) animation = requestAnimationFrame(render);
+    };
+    render();
+
+    const resize = () => {
+      camera.aspect = host.clientWidth / host.clientHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(host.clientWidth, host.clientHeight);
+    };
+    window.addEventListener("resize", resize);
+
+    return () => {
+      cancelAnimationFrame(animation);
+      window.removeEventListener("pointermove", onPointerMove);
+      window.removeEventListener("resize", resize);
+      geometry.dispose();
+      material.dispose();
+      texture.dispose();
+      renderer.dispose();
+      renderer.domElement.remove();
+    };
+  }, []);
+
+  return <div ref={mount} className="fingertip-particles" aria-hidden="true" />;
+}
+
 function ThreeLogo() {
   const mount = useRef<HTMLDivElement>(null);
 
@@ -468,7 +615,7 @@ export default function Home() {
     const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     const context = gsap.context(() => {
       if (reduceMotion) {
-        gsap.set([".hands", ".floating-logo"], { opacity: 1 });
+        gsap.set([".hands", ".floating-logo", ".fingertip-particles"], { opacity: 1 });
         gsap.set([".hand-left", ".hand-right", ".three-logo", ".hero-title h1", ".hero-title p"], { opacity: 1, clearProps: "transform" });
         gsap.set(".logo-aura", { opacity: .72, scale: 1 });
         return;
@@ -478,6 +625,7 @@ export default function Home() {
         .fromTo(".hands", { opacity: 0 }, { opacity: 1, duration: motion.timeline.handsDuration, ease: "power2.out" }, 0)
         .fromTo(".hand-left", { xPercent: -10, yPercent: 8, rotation: -2.5 }, { xPercent: 0, yPercent: 0, rotation: 0, duration: motion.timeline.handsDuration, ease: "power2.out" }, 0)
         .fromTo(".hand-right", { xPercent: 10, yPercent: -8, rotation: -2.25 }, { xPercent: 0, yPercent: 0, rotation: 0, duration: motion.timeline.handsDuration, ease: "power2.out" }, 0)
+        .fromTo(".fingertip-particles", { opacity: 0 }, { opacity: 1, duration: .48 }, motion.timeline.particlesStart)
         .fromTo(".floating-logo", { opacity: 0 }, { opacity: 1, duration: .4 }, motion.timeline.logoStart)
         .fromTo(".three-logo", { opacity: 0, scale: .02, filter: "blur(14px) brightness(1.8)" }, { opacity: 1, scale: 1, filter: "blur(0px) brightness(1)", duration: 1.35, ease: "back.out(1.8)", clearProps: "transform,filter" }, motion.timeline.logoStart)
         .fromTo(".logo-aura", { opacity: 0, scale: .45 }, { opacity: .8, scale: 1, duration: 1.1 }, motion.timeline.logoStart + .15)
@@ -517,6 +665,7 @@ export default function Home() {
     <main ref={root} className={`minimal-creation ${entering ? "entering" : ""}`} onPointerMove={trackPointer}>
       <div className="paper-grain" aria-hidden="true" />
       <div className="dot-field" aria-hidden="true" />
+      <FingertipParticles />
 
       <div className="hands" aria-hidden="true">
         <div className="hand hand-left" id="hand-human">
