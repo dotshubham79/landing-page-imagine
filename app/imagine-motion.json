@@ -4,9 +4,9 @@
     "handsDuration": 1.8,
     "particlesStart": 1.2,
     "mixStart": 2.5,
-    "logoStart": 2.5,
-    "headerStart": 3.8,
-    "complete": 4.5
+    "logoStart": 1.35,
+    "headerStart": 2.45,
+    "complete": 3.2
   },
   "particles": {
     "countPerStream": 1600,

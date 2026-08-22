@@ -468,7 +468,7 @@ export default function Home() {
     const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     const context = gsap.context(() => {
       if (reduceMotion) {
-        gsap.set([".hands", ".floating-logo", ".logo-sparkles", ".three-atmosphere"], { opacity: 1 });
+        gsap.set([".hands", ".floating-logo"], { opacity: 1 });
         gsap.set([".hand-left", ".hand-right", ".three-logo", ".hero-title h1", ".hero-title p"], { opacity: 1, clearProps: "transform" });
         gsap.set(".logo-aura", { opacity: .72, scale: 1 });
         return;
@@ -478,11 +478,9 @@ export default function Home() {
         .fromTo(".hands", { opacity: 0 }, { opacity: 1, duration: motion.timeline.handsDuration, ease: "power2.out" }, 0)
         .fromTo(".hand-left", { xPercent: -10, yPercent: 8, rotation: -2.5 }, { xPercent: 0, yPercent: 0, rotation: 0, duration: motion.timeline.handsDuration, ease: "power2.out" }, 0)
         .fromTo(".hand-right", { xPercent: 10, yPercent: -8, rotation: -2.25 }, { xPercent: 0, yPercent: 0, rotation: 0, duration: motion.timeline.handsDuration, ease: "power2.out" }, 0)
-        .fromTo(".three-atmosphere", { opacity: 0 }, { opacity: 1, duration: .55 }, motion.timeline.particlesStart)
         .fromTo(".floating-logo", { opacity: 0 }, { opacity: 1, duration: .4 }, motion.timeline.logoStart)
         .fromTo(".three-logo", { opacity: 0, scale: .02, filter: "blur(14px) brightness(1.8)" }, { opacity: 1, scale: 1, filter: "blur(0px) brightness(1)", duration: 1.35, ease: "back.out(1.8)", clearProps: "transform,filter" }, motion.timeline.logoStart)
         .fromTo(".logo-aura", { opacity: 0, scale: .45 }, { opacity: .8, scale: 1, duration: 1.1 }, motion.timeline.logoStart + .15)
-        .fromTo(".logo-sparkles", { opacity: 0, scale: .72 }, { opacity: 1, scale: 1, duration: .85 }, motion.timeline.logoStart + .2)
         .fromTo(".hero-title h1", { opacity: 0, y: -20 }, { opacity: 1, y: 0, duration: .72 }, motion.timeline.headerStart)
         .fromTo(".hero-title p", { opacity: 0, y: -12 }, { opacity: 1, y: 0, duration: .68 }, motion.timeline.headerStart + .12);
 
@@ -519,7 +517,6 @@ export default function Home() {
     <main ref={root} className={`minimal-creation ${entering ? "entering" : ""}`} onPointerMove={trackPointer}>
       <div className="paper-grain" aria-hidden="true" />
       <div className="dot-field" aria-hidden="true" />
-      <ThreeAtmosphere />
 
       <div className="hands" aria-hidden="true">
         <div className="hand hand-left" id="hand-human">
@@ -540,10 +537,6 @@ export default function Home() {
         <h1>IMAGINE</h1>
         <p>Where imagination becomes intelligence.</p>
       </header>
-
-      <div className="logo-sparkles" aria-hidden="true">
-        <i /><i /><i /><i /><i /><i />
-      </div>
 
       <button className="floating-logo" type="button" onClick={enterV1} aria-label="Enter IMAGINE V1">
         <span className="logo-aura" aria-hidden="true" />
