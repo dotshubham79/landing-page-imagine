@@ -511,6 +511,170 @@ function FingertipParticles() {
   return <div ref={mount} className="fingertip-particles" aria-hidden="true" />;
 }
 
+function TeamParticleTransition() {
+  const mount = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const host = mount.current;
+    if (!host) return;
+
+    const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    if (reduceMotion) return;
+
+    let animation = 0;
+    let disposed = false;
+    let renderer: THREE.WebGLRenderer | null = null;
+    let geometry: THREE.BufferGeometry | null = null;
+    let material: THREE.PointsMaterial | null = null;
+    let texture: THREE.CanvasTexture | null = null;
+    const image = new Image();
+
+    image.onload = () => {
+      if (disposed) return;
+
+      const width = host.clientWidth;
+      const height = host.clientHeight;
+      const aspect = width / height;
+      const scene = new THREE.Scene();
+      const camera = new THREE.OrthographicCamera(-aspect, aspect, 1, -1, .1, 10);
+      camera.position.z = 3;
+
+      renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, powerPreference: "high-performance" });
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+      renderer.setSize(width, height);
+      renderer.setClearColor(0x000000, 0);
+      renderer.outputColorSpace = THREE.SRGBColorSpace;
+      host.appendChild(renderer.domElement);
+
+      const sampleCanvas = document.createElement("canvas");
+      const sampleWidth = 192;
+      const sampleHeight = 108;
+      sampleCanvas.width = sampleWidth;
+      sampleCanvas.height = sampleHeight;
+      const sampleContext = sampleCanvas.getContext("2d", { willReadFrequently: true });
+      if (!sampleContext) return;
+      sampleContext.drawImage(image, 0, 0, sampleWidth, sampleHeight);
+      const pixels = sampleContext.getImageData(0, 0, sampleWidth, sampleHeight).data;
+
+      const targets: number[] = [];
+      const starts: number[] = [];
+      const scatters: number[] = [];
+      const colors: number[] = [];
+      const imageScale = Math.min(aspect * 2, 3.55);
+      for (let y = 0; y < sampleHeight; y += 2) {
+        for (let x = 0; x < sampleWidth; x += 2) {
+          const pixel = (y * sampleWidth + x) * 4;
+          const red = pixels[pixel];
+          const green = pixels[pixel + 1];
+          const blue = pixels[pixel + 2];
+          const average = (red + green + blue) / 3;
+          const range = Math.max(red, green, blue) - Math.min(red, green, blue);
+          const portraitDetail = (255 - average) * .85 + range;
+          if (portraitDetail < 31 && Math.random() > .035) continue;
+
+          const targetX = (x / sampleWidth - .5) * imageScale;
+          const targetY = (.5 - y / sampleHeight) * 1.78;
+          const fromLeft = targetX < 0;
+          const sourceX = fromLeft ? -aspect * .55 : aspect * .55;
+          const sourceY = fromLeft ? -.06 : .18;
+          targets.push(targetX, targetY, (Math.random() - .5) * .08);
+          starts.push(
+            sourceX + (Math.random() - .5) * .26,
+            sourceY + (Math.random() - .5) * .2,
+            (Math.random() - .5) * .35,
+          );
+          scatters.push(
+            (Math.random() - .5) * aspect * 2.25,
+            (Math.random() - .5) * 2.15,
+            (Math.random() - .5) * .8,
+          );
+          colors.push(red / 255, green / 255, blue / 255);
+        }
+      }
+
+      const positions = new Float32Array(starts);
+      const startPositions = new Float32Array(starts);
+      const scatterPositions = new Float32Array(scatters);
+      const targetPositions = new Float32Array(targets);
+      geometry = new THREE.BufferGeometry();
+      geometry.setAttribute("position", new THREE.BufferAttribute(positions, 3));
+      geometry.setAttribute("color", new THREE.BufferAttribute(new Float32Array(colors), 3));
+
+      const textureCanvas = document.createElement("canvas");
+      textureCanvas.width = 64;
+      textureCanvas.height = 64;
+      const textureContext = textureCanvas.getContext("2d");
+      if (textureContext) {
+        const glow = textureContext.createRadialGradient(32, 32, 0, 32, 32, 32);
+        glow.addColorStop(0, "rgba(255,255,255,1)");
+        glow.addColorStop(.3, "rgba(255,255,255,.96)");
+        glow.addColorStop(.72, "rgba(255,255,255,.38)");
+        glow.addColorStop(1, "rgba(255,255,255,0)");
+        textureContext.fillStyle = glow;
+        textureContext.fillRect(0, 0, 64, 64);
+      }
+      texture = new THREE.CanvasTexture(textureCanvas);
+      material = new THREE.PointsMaterial({
+        size: .026,
+        map: texture,
+        vertexColors: true,
+        transparent: true,
+        opacity: .92,
+        alphaTest: .02,
+        depthWrite: false,
+        blending: THREE.NormalBlending,
+        sizeAttenuation: true,
+      });
+      const points = new THREE.Points(geometry, material);
+      points.frustumCulled = false;
+      scene.add(points);
+
+      const startedAt = performance.now();
+      const easeInOut = (value: number) => value < .5 ? 4 * value * value * value : 1 - Math.pow(-2 * value + 2, 3) / 2;
+      const render = (now: number) => {
+        if (disposed || !renderer || !geometry || !material) return;
+        const elapsed = (now - startedAt) / 1000;
+        const positionAttribute = geometry.getAttribute("position") as THREE.BufferAttribute;
+        const values = positionAttribute.array as Float32Array;
+        const scattering = Math.min(elapsed / .55, 1);
+        const forming = Math.min(Math.max((elapsed - .36) / 1.44, 0), 1);
+        const scatterEase = easeInOut(scattering);
+        const formEase = easeInOut(forming);
+
+        for (let i = 0; i < values.length; i += 3) {
+          const scatteredX = THREE.MathUtils.lerp(startPositions[i], scatterPositions[i], scatterEase);
+          const scatteredY = THREE.MathUtils.lerp(startPositions[i + 1], scatterPositions[i + 1], scatterEase);
+          const scatteredZ = THREE.MathUtils.lerp(startPositions[i + 2], scatterPositions[i + 2], scatterEase);
+          const index = i / 3;
+          const curl = Math.sin(index * 1.71 + elapsed * 4.2) * .035 * (1 - formEase);
+          values[i] = THREE.MathUtils.lerp(scatteredX, targetPositions[i], formEase) + curl;
+          values[i + 1] = THREE.MathUtils.lerp(scatteredY, targetPositions[i + 1], formEase) + Math.cos(index * 1.23 + elapsed * 3.6) * .028 * (1 - formEase);
+          values[i + 2] = THREE.MathUtils.lerp(scatteredZ, targetPositions[i + 2], formEase);
+        }
+        positionAttribute.needsUpdate = true;
+        material.opacity = elapsed > 1.72 ? Math.max(0, 1 - (elapsed - 1.72) / .58) : .92;
+        renderer.render(scene, camera);
+        if (elapsed < 2.34) animation = requestAnimationFrame(render);
+      };
+      animation = requestAnimationFrame(render);
+    };
+    image.src = "/imagine-team-brothers-v1.png";
+
+    return () => {
+      disposed = true;
+      image.onload = null;
+      cancelAnimationFrame(animation);
+      geometry?.dispose();
+      material?.dispose();
+      texture?.dispose();
+      renderer?.dispose();
+      renderer?.domElement.remove();
+    };
+  }, []);
+
+  return <div ref={mount} className="team-particle-transition" aria-hidden="true" />;
+}
+
 function ThreeLogo() {
   const mount = useRef<HTMLDivElement>(null);
 
@@ -610,7 +774,9 @@ function ThreeLogo() {
 
 export default function Home() {
   const root = useRef<HTMLElement>(null);
+  const teamLayer = useRef<HTMLElement>(null);
   const [entering, setEntering] = useState(false);
+  const [teamOpen, setTeamOpen] = useState(false);
 
   useEffect(() => {
     if (!root.current) return;
@@ -644,6 +810,50 @@ export default function Home() {
     };
   }, []);
 
+  useEffect(() => {
+    if (!teamOpen || !root.current || !teamLayer.current) return;
+    const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const context = gsap.context(() => {
+      if (reduceMotion) {
+        gsap.set(".team-reveal", { autoAlpha: 1 });
+        gsap.set([".team-portrait", ".team-copy", ".team-close"], { opacity: 1, clearProps: "transform,filter,clipPath" });
+        return;
+      }
+
+      gsap.timeline({ defaults: { ease: "power3.inOut" } })
+        .set(".team-reveal", { autoAlpha: 1 })
+        .to([".hero-title", ".hands", ".fingertip-particles", ".floating-logo", ".team-trigger"], {
+          opacity: 0,
+          scale: .985,
+          filter: "blur(8px)",
+          duration: .62,
+          stagger: .025,
+        }, 0)
+        .fromTo(".team-portrait", {
+          opacity: 0,
+          scale: 1.035,
+          filter: "blur(18px) saturate(.72)",
+          clipPath: "circle(0% at 50% 50%)",
+        }, {
+          opacity: 1,
+          scale: 1,
+          filter: "blur(0px) saturate(1)",
+          clipPath: "circle(78% at 50% 50%)",
+          duration: 1.28,
+          ease: "power2.out",
+        }, .92)
+        .fromTo([".team-copy", ".team-close"], { opacity: 0, y: 14 }, {
+          opacity: 1,
+          y: 0,
+          duration: .72,
+          stagger: .08,
+          ease: "power3.out",
+        }, 1.55);
+    }, root);
+
+    return () => context.revert();
+  }, [teamOpen]);
+
   function trackPointer(event: PointerEvent<HTMLElement>) {
     if (!root.current) return;
     const x = event.clientX / window.innerWidth - .5;
@@ -657,10 +867,35 @@ export default function Home() {
   }
 
   function enterV1() {
-    if (entering) return;
+    if (entering || teamOpen) return;
     gsap.to(".three-logo", { scale: motion.logo.clickScale, duration: .15, repeat: 1, yoyo: true, ease: "power2.inOut" });
     window.setTimeout(() => setEntering(true), 310);
     window.setTimeout(() => window.location.assign("/v1"), 980);
+  }
+
+  function openTeam() {
+    if (teamOpen || entering) return;
+    setTeamOpen(true);
+  }
+
+  function closeTeam() {
+    if (!teamOpen || !root.current) return;
+    const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    if (reduceMotion) {
+      setTeamOpen(false);
+      return;
+    }
+    gsap.timeline({ defaults: { ease: "power3.inOut" }, onComplete: () => setTeamOpen(false) })
+      .to([".team-copy", ".team-close"], { opacity: 0, y: -10, duration: .28 }, 0)
+      .to(".team-portrait", { opacity: 0, scale: 1.018, filter: "blur(10px)", duration: .58 }, .08)
+      .to(".team-reveal", { autoAlpha: 0, duration: .38 }, .42)
+      .to([".hero-title", ".hands", ".fingertip-particles", ".floating-logo", ".team-trigger"], {
+        opacity: 1,
+        scale: 1,
+        filter: "blur(0px)",
+        duration: .68,
+        stagger: .035,
+      }, .44);
   }
 
   return (
@@ -668,6 +903,11 @@ export default function Home() {
       <div className="paper-grain" aria-hidden="true" />
       <div className="dot-field" aria-hidden="true" />
       <FingertipParticles />
+
+      <button className="team-trigger" type="button" onClick={openTeam} aria-haspopup="dialog" aria-expanded={teamOpen}>
+        <span>Team</span>
+        <small>people making this possible</small>
+      </button>
 
       <div className="hands" aria-hidden="true">
         <div className="hand hand-left" id="hand-human">
@@ -693,6 +933,21 @@ export default function Home() {
         <span className="logo-aura" aria-hidden="true" />
         <ThreeLogo />
       </button>
+
+      {teamOpen && <TeamParticleTransition />}
+      <section ref={teamLayer} className="team-reveal" role="dialog" aria-modal="true" aria-label="The people making IMAGINE possible" aria-hidden={!teamOpen}>
+        <div className="team-portrait" aria-hidden="true">
+          <img src="/imagine-team-brothers-v1.png" alt="" />
+        </div>
+        <button className="team-close" type="button" onClick={closeTeam} aria-label="Return to the IMAGINE landing page">
+          <span aria-hidden="true">&#8592;</span> Back to IMAGINE
+        </button>
+        <div className="team-copy">
+          <p className="team-eyebrow">People making this possible</p>
+          <h2>Shubham <i>&amp;</i> Binayak</h2>
+          <p className="team-statement">Two brothers making the future of imagination.</p>
+        </div>
+      </section>
 
       <div className="entry-veil" aria-hidden="true" />
     </main>
