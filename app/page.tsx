@@ -546,7 +546,7 @@ function ThreeLogo() {
         depthWrite: false,
         blending: THREE.AdditiveBlending,
         vertexShader: `varying vec2 vUv; void main(){vUv=uv;gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.0);}`,
-        fragmentShader: `varying vec2 vUv; void main(){float d=length(vUv-.5);float a=smoothstep(.5,0.,d);gl_FragColor=vec4(1.,.61,.08,a*a*.42);}`,
+        fragmentShader: `varying vec2 vUv; void main(){float d=length(vUv-.5);float a=smoothstep(.5,0.,d);gl_FragColor=vec4(1.,.64,.1,a*a*.58);}`,
       }),
     );
     glow.position.z = -.3;
