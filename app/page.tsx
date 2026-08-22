@@ -946,7 +946,7 @@ export default function Home() {
 
       <header className="hero-title">
         <h1>IMAGINE</h1>
-        <p>Where imagination becomes intelligence.</p>
+        <p>Where imagination meets intelligence.</p>
       </header>
 
       <button className="floating-logo" type="button" onClick={enterV1} aria-label="Enter IMAGINE V1">
