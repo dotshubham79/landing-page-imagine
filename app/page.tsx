@@ -5,6 +5,13 @@ import { gsap } from "gsap";
 import * as THREE from "three";
 import motion from "./imagine-motion.json";
 
+const teamImages = [
+  "/imagine-team-photo-v1.jpg",
+  "/imagine-team-childhood-v1.jpg",
+  "/imagine-team-campus-v1.jpg",
+  "/imagine-team-tradition-v1.jpg",
+];
+
 function ThreeAtmosphere() {
   const mount = useRef<HTMLDivElement>(null);
 
@@ -779,6 +786,7 @@ export default function Home() {
   const teamLayer = useRef<HTMLElement>(null);
   const [entering, setEntering] = useState(false);
   const [teamOpen, setTeamOpen] = useState(false);
+  const [teamImageIndex, setTeamImageIndex] = useState(0);
 
   useEffect(() => {
     if (!root.current) return;
@@ -856,6 +864,15 @@ export default function Home() {
     return () => context.revert();
   }, [teamOpen]);
 
+  useEffect(() => {
+    if (!teamOpen) return;
+    setTeamImageIndex(0);
+    const interval = window.setInterval(() => {
+      setTeamImageIndex((current) => (current + 1) % teamImages.length);
+    }, 4800);
+    return () => window.clearInterval(interval);
+  }, [teamOpen]);
+
   function trackPointer(event: PointerEvent<HTMLElement>) {
     if (!root.current) return;
     const x = event.clientX / window.innerWidth - .5;
@@ -900,6 +917,10 @@ export default function Home() {
       }, .44);
   }
 
+  function advanceTeamImage() {
+    setTeamImageIndex((current) => (current + 1) % teamImages.length);
+  }
+
   return (
     <main ref={root} className={`minimal-creation ${entering ? "entering" : ""}`} onPointerMove={trackPointer}>
       <div className="paper-grain" aria-hidden="true" />
@@ -937,9 +958,18 @@ export default function Home() {
 
       {teamOpen && <TeamParticleTransition />}
       <section ref={teamLayer} className="team-reveal" role="dialog" aria-modal="true" aria-label="The people making IMAGINE possible" aria-hidden={!teamOpen}>
-        <div className="team-portrait" aria-hidden="true">
-          <img src="/imagine-team-photo-v1.jpg" alt="" />
-        </div>
+        <button className="team-portrait" type="button" onClick={advanceTeamImage} aria-label="Show the next photograph">
+          {teamImages.map((source, index) => (
+            <img
+              key={source}
+              className={index === teamImageIndex ? "is-active" : ""}
+              src={source}
+              alt=""
+              aria-hidden={index !== teamImageIndex}
+            />
+          ))}
+          <span className="team-slide-count" aria-hidden="true">0{teamImageIndex + 1} / 0{teamImages.length}</span>
+        </button>
         <button className="team-close" type="button" onClick={closeTeam} aria-label="Return to the IMAGINE landing page">
           <span aria-hidden="true">&#8592;</span> Back to IMAGINE
         </button>
