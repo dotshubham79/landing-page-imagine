@@ -49,6 +49,7 @@ function ThreeAtmosphere() {
       uniform float uTime;
       uniform float uSpeed;
       uniform float uBend;
+      uniform float uOrbitDirection;
       uniform vec3 uOrigin;
       varying vec3 vColor;
       varying float vAlpha;
@@ -86,12 +87,16 @@ function ThreeAtmosphere() {
         position += aOffset * (1. - eased) * .34;
         position += turbulence * (.035 + life * .22);
         position.y += uBend * life;
+        float orbitStrength = smoothstep(.55, .94, progress);
+        float orbitAngle = aSeed * 6.2831853 + progress * 8.8 * uOrbitDirection + uTime * .46;
+        vec3 orbit = vec3(cos(orbitAngle), sin(orbitAngle) * .68, sin(orbitAngle * .7) * .18);
+        position += orbit * orbitStrength * (.07 + .14 * life);
 
         vColor = color;
-        vAlpha = smoothstep(0., .08, progress) * (1. - smoothstep(.76, 1., progress));
+        vAlpha = smoothstep(0., .055, progress) * (1. - smoothstep(.9, 1., progress));
         vec4 modelViewPosition = modelViewMatrix * vec4(position, 1.);
         gl_Position = projectionMatrix * modelViewPosition;
-        gl_PointSize = aSize * (8. / -modelViewPosition.z) * (.72 + life * .5);
+        gl_PointSize = aSize * (14. / -modelViewPosition.z) * (.78 + life * .58 + orbitStrength * .25);
       }
     `;
     const streamFragmentShader = `
@@ -106,7 +111,7 @@ function ThreeAtmosphere() {
       }
     `;
 
-    const createEnergyStream = (palette: number[], count: number, size: number, opacity: number, origin: THREE.Vector3, speed: number, bend: number) => {
+    const createEnergyStream = (palette: number[], count: number, size: number, opacity: number, origin: THREE.Vector3, speed: number, bend: number, orbitDirection: number) => {
       const geometry = new THREE.BufferGeometry();
       const streamPositions = new Float32Array(count * 3);
       const streamColors = new Float32Array(count * 3);
@@ -134,6 +139,7 @@ function ThreeAtmosphere() {
           uTime: { value: 0 },
           uSpeed: { value: speed },
           uBend: { value: bend },
+          uOrbitDirection: { value: orbitDirection },
           uOrigin: { value: origin },
           uOpacity: { value: opacity },
         },
@@ -150,8 +156,19 @@ function ThreeAtmosphere() {
       return { geometry, material };
     };
 
-    const divineStream = createEnergyStream([0xffffff, 0xc8f5ff, 0x79d9ff], 900, 3.4, .9, new THREE.Vector3(2.12, .46, 0), .16, -.11);
-    const humanStream = createEnergyStream([0xffd36c, 0xf7a92f, 0xff7a21], 900, 3.7, .86, new THREE.Vector3(-2.12, -.38, 0), .145, .1);
+    const divineStream = createEnergyStream([0xffffff, 0xa8ecff, 0x45c8ff], 900, 3.5, 1, new THREE.Vector3(), .16, -.075, 1);
+    const humanStream = createEnergyStream([0xffe08a, 0xf7a92f, 0xff7418], 900, 3.8, .98, new THREE.Vector3(), .145, .07, -1);
+
+    const viewportToWorld = (x: number, y: number) => {
+      const visibleHeight = 2 * Math.tan(THREE.MathUtils.degToRad(camera.fov / 2)) * camera.position.z;
+      const visibleWidth = visibleHeight * camera.aspect;
+      return new THREE.Vector3((x - .5) * visibleWidth, (.5 - y) * visibleHeight, 0);
+    };
+    const alignStreamsToFingertips = () => {
+      divineStream.material.uniforms.uOrigin.value.copy(viewportToWorld(.565, .415));
+      humanStream.material.uniforms.uOrigin.value.copy(viewportToWorld(.425, .505));
+    };
+    alignStreamsToFingertips();
 
     const haloMaterial = new THREE.ShaderMaterial({
       transparent: true,
@@ -182,7 +199,7 @@ function ThreeAtmosphere() {
     orbitGroup.position.set(0, 0, 0);
     for (let ring = 0; ring < 3; ring += 1) {
       const geometry = new THREE.BufferGeometry();
-      const count = 70 + ring * 22;
+      const count = 120 + ring * 36;
       const ringPositions = new Float32Array(count * 3);
       const radius = .82 + ring * .27;
       for (let i = 0; i < count; i += 1) {
@@ -192,7 +209,8 @@ function ThreeAtmosphere() {
         ringPositions[i * 3 + 2] = 0;
       }
       geometry.setAttribute("position", new THREE.BufferAttribute(ringPositions, 3));
-      const material = new THREE.PointsMaterial({ color: ring === 1 ? 0xd6a541 : 0xb9a579, size: .018, transparent: true, opacity: .14 - ring * .025, depthWrite: false });
+      const ringColors = [0x59cfff, 0xf7ad32, 0xfff0bb];
+      const material = new THREE.PointsMaterial({ color: ringColors[ring], size: .038 - ring * .006, transparent: true, opacity: .32 - ring * .055, depthWrite: false, blending: THREE.AdditiveBlending });
       const points = new THREE.Points(geometry, material);
       points.rotation.z = ring * .3;
       orbitGroup.add(points);
@@ -234,6 +252,7 @@ function ThreeAtmosphere() {
       camera.aspect = width / height;
       camera.updateProjectionMatrix();
       renderer.setSize(width, height);
+      alignStreamsToFingertips();
     };
     window.addEventListener("resize", resize);
 
