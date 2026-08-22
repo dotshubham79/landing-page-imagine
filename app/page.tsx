@@ -8,8 +8,6 @@ import motion from "./imagine-motion.json";
 const teamImages = [
   "/imagine-team-photo-v1.jpg",
   "/imagine-team-childhood-v1.jpg",
-  "/imagine-team-campus-v1.jpg",
-  "/imagine-team-tradition-v1.jpg",
 ];
 
 function ThreeAtmosphere() {
