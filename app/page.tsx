@@ -336,8 +336,8 @@ export default function Home() {
       <ThreeAtmosphere />
 
       <div className="hands" aria-hidden="true">
-        <div className="hand hand-left"><img src="/imagine-hands-reaching-v9.png" alt="" /></div>
-        <div className="hand hand-right"><img src="/imagine-hands-reaching-v9.png" alt="" /></div>
+        <div className="hand hand-left"><img src="/imagine-hands-transparent-v10.png" alt="" /></div>
+        <div className="hand hand-right"><img src="/imagine-hands-transparent-v10.png" alt="" /></div>
       </div>
 
       <header className="hero-title">
