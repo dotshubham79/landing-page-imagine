@@ -906,7 +906,6 @@ export default function Home() {
 
       <button className="team-trigger" type="button" onClick={openTeam} aria-haspopup="dialog" aria-expanded={teamOpen}>
         <span>Team</span>
-        <small>people making this possible</small>
       </button>
 
       <div className="hands" aria-hidden="true">

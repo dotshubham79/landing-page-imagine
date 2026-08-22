@@ -52,10 +52,9 @@ button { color: inherit; font: inherit; }
 .hero-title h1 { margin: 0; color: #0d1322; font-family: "Plus Jakarta Sans", Inter, -apple-system, BlinkMacSystemFont, sans-serif; font-size: clamp(52px,4.7vw,76px); font-weight: 900; line-height: 1; letter-spacing: -.04em; text-transform: uppercase; opacity: 0; transform: translateY(-20px); }
 .hero-title p { margin: 8px 0 0; color: #4a5568; font-family: "Playfair Display", Georgia, serif; font-size: clamp(18px,1.4vw,22px); font-style: italic; font-weight: 400; line-height: 1.1; letter-spacing: -.01em; opacity: 0; transform: translateY(-12px); }
 
-.team-trigger { position: fixed; z-index: 14; top: clamp(24px,4vh,42px); left: clamp(22px,3.2vw,54px); display: flex; flex-direction: column; align-items: flex-start; gap: 3px; padding: 0; border: 0; background: transparent; cursor: pointer; text-align: left; opacity: .48; transition: opacity .3s ease,transform .3s ease; }
+.team-trigger { position: fixed; z-index: 14; right: clamp(22px,3.2vw,54px); bottom: clamp(24px,4vh,42px); display: flex; align-items: center; padding: 0; border: 0; background: transparent; cursor: pointer; text-align: right; opacity: .48; transition: opacity .3s ease,transform .3s ease; }
 .team-trigger span { color: var(--ink); font: 650 12px/1 var(--display); letter-spacing: .02em; }
-.team-trigger small { color: rgba(11,24,53,.54); font: italic 14px/1.1 "Playfair Display",Georgia,serif; }
-.team-trigger:hover,.team-trigger:focus-visible { opacity: 1; transform: translateX(4px); }
+.team-trigger:hover,.team-trigger:focus-visible { opacity: 1; transform: translateX(-4px); }
 .team-trigger:focus-visible { outline: 1px solid rgba(11,24,53,.34); outline-offset: 8px; border-radius: 2px; }
 
 .floating-logo { position: absolute; z-index: 8; left: 50%; top: 50%; width: 204px; height: 204px; display: grid; place-items: center; padding: 0; border: 0; border-radius: 50%; background: transparent; cursor: pointer; opacity: 0; transform: translate(calc(-50% + var(--logo-x)),calc(-50% + var(--logo-y))); transition: transform .6s ease-out,filter .3s ease; }
@@ -103,7 +102,6 @@ button { color: inherit; font: inherit; }
   .hero-title p { font-size: 18px; }
   .hands { top: 22%; left: -48%; width: 196%; height: 64%; }
   .floating-logo { top: 53%; transform: translate(-50%,-50%) scale(.68); }
-  .team-trigger small { display: none; }
   .team-copy { top: 52%; width: 84vw; }
   .team-copy h2 { font-size: clamp(38px,11vw,52px); }
   .team-statement { font-size: 18px; }
