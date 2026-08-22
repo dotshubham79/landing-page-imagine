@@ -1,7 +1,7 @@
 @import url("https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,200..800&family=DM+Mono:wght@300;400&family=Instrument+Serif&display=swap");
 
 :root {
-  --paper: #fbf6ea;
+  --paper: #f8f6f0;
   --ink: #0b1835;
   --muted-ink: rgba(11,24,53,.69);
   --gold: #f7b82f;
@@ -46,9 +46,8 @@ button { color: inherit; font: inherit; }
 .hands::after { content: ""; position: absolute; inset: 0; pointer-events: none; background: linear-gradient(to bottom,rgba(251,246,234,.53),transparent 29%,transparent 76%,rgba(251,246,234,.22)); }
 
 .hero-title { position: fixed; z-index: 7; left: 50%; top: clamp(32px,7vh,72px); width: min(760px,84vw); text-align: center; transform: translateX(-50%); }
-.hero-title h1 { margin: 0; color: var(--ink); font: 750 clamp(48px,4.6vw,74px)/.94 var(--display); letter-spacing: -.02em; opacity: 0; transform: translateY(22px) scale(.98); transition: opacity .85s ease .52s,transform 1s cubic-bezier(.16,1,.3,1) .52s; }
-.hero-title p { margin: 8px 0 0; color: var(--muted-ink); font: 400 clamp(17px,1.45vw,23px)/1 var(--serif); letter-spacing: -.012em; opacity: 0; transform: translateY(13px); transition: opacity .8s ease .76s,transform .9s ease .76s; }
-.ready .hero-title h1,.ready .hero-title p { opacity: 1; transform: none; }
+.hero-title h1 { margin: 0; color: var(--ink); font: 750 clamp(48px,4.6vw,74px)/.94 var(--display); letter-spacing: -.02em; opacity: 0; transform: translateY(-20px); }
+.hero-title p { margin: 8px 0 0; color: var(--muted-ink); font: 400 clamp(17px,1.45vw,23px)/1 var(--serif); letter-spacing: -.012em; opacity: 0; transform: translateY(-12px); }
 
 .logo-sparkles { position: absolute; z-index: 7; left: 50%; top: 50%; width: 330px; height: 250px; pointer-events: none; opacity: 0; transform: translate(-50%,-50%); }
 .logo-sparkles i { position: absolute; width: 8px; height: 8px; animation: sparkle 2.8s ease-in-out infinite; }
@@ -63,7 +62,7 @@ button { color: inherit; font: inherit; }
 .logo-sparkles i:nth-child(6) { right: 38%; top: 11%; animation-delay: -2.5s; transform: scale(.5); }
 @keyframes sparkle { 0%,100% { opacity: .16; filter: blur(.2px); } 45% { opacity: 1; filter: none; } 62% { opacity: .35; } }
 
-.floating-logo { position: absolute; z-index: 8; left: 50%; top: 50%; width: 154px; height: 154px; display: grid; place-items: center; padding: 0; border: 0; border-radius: 50%; background: transparent; cursor: pointer; opacity: 0; transform: translate(calc(-50% + var(--logo-x)),calc(-50% + var(--logo-y))); transition: transform .6s ease-out,filter .3s ease; }
+.floating-logo { position: absolute; z-index: 8; left: 50%; top: 50%; width: 184px; height: 184px; display: grid; place-items: center; padding: 0; border: 0; border-radius: 50%; background: transparent; cursor: pointer; opacity: 0; transform: translate(calc(-50% + var(--logo-x)),calc(-50% + var(--logo-y))); transition: transform .6s ease-out,filter .3s ease; }
 .logo-aura { position: absolute; z-index: 0; inset: 7%; border-radius: 42%; pointer-events: none; opacity: 0; transform: scale(.72); background: radial-gradient(circle,rgba(255,250,215,.98) 0,rgba(255,193,57,.58) 34%,rgba(255,168,28,.18) 58%,transparent 76%); filter: blur(12px); box-shadow: 0 0 38px rgba(244,166,31,.5),0 0 86px rgba(255,207,87,.28); }
 .three-logo { position: relative; z-index: 1; width: 100%; height: 100%; transition: transform .35s cubic-bezier(.16,1,.3,1),filter .3s ease; filter: drop-shadow(0 16px 18px rgba(164,102,4,.16)); }
 .three-logo canvas { width: 100%; height: 100%; display: block; }

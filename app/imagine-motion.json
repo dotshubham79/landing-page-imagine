@@ -1,0 +1,21 @@
+{
+  "background": "#f8f6f0",
+  "timeline": {
+    "handsDuration": 1.8,
+    "particlesStart": 1.2,
+    "mixStart": 2.5,
+    "logoStart": 2.5,
+    "headerStart": 3.8,
+    "complete": 4.5
+  },
+  "particles": {
+    "countPerStream": 1000,
+    "divine": ["#e2b043", "#fff1b0", "#ffffff"],
+    "human": ["#2a2a2a", "#8c8c8c", "#e5e5e5"]
+  },
+  "logo": {
+    "size": 184,
+    "hoverScale": 1.08,
+    "clickScale": 1.18
+  }
+}

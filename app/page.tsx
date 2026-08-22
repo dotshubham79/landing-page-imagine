@@ -3,6 +3,7 @@
 import { PointerEvent, useEffect, useRef, useState } from "react";
 import { gsap } from "gsap";
 import * as THREE from "three";
+import motion from "./imagine-motion.json";
 
 function ThreeAtmosphere() {
   const mount = useRef<HTMLDivElement>(null);
@@ -50,6 +51,9 @@ function ThreeAtmosphere() {
       uniform float uSpeed;
       uniform float uBend;
       uniform float uOrbitDirection;
+      uniform float uEmission;
+      uniform float uMix;
+      uniform vec2 uPointer;
       uniform vec3 uOrigin;
       varying vec3 vColor;
       varying float vAlpha;
@@ -80,7 +84,8 @@ function ThreeAtmosphere() {
         float progress = fract(aSeed + uTime * uSpeed);
         float eased = progress * progress * (3. - 2. * progress);
         float life = sin(progress * 3.14159265);
-        vec3 base = mix(uOrigin, vec3(0.), eased);
+        vec3 destination = mix(uOrigin + aOffset * .3, vec3(0.), uMix);
+        vec3 base = mix(uOrigin, destination, eased);
         vec3 fieldPosition = base * 1.8 + aOffset * 2.5 + vec3(uTime * .14);
         vec3 turbulence = curlNoise(fieldPosition);
         vec3 position = base;
@@ -90,10 +95,15 @@ function ThreeAtmosphere() {
         float orbitStrength = smoothstep(.55, .94, progress);
         float orbitAngle = aSeed * 6.2831853 + progress * 8.8 * uOrbitDirection + uTime * .46;
         vec3 orbit = vec3(cos(orbitAngle), sin(orbitAngle) * .68, sin(orbitAngle * .7) * .18);
-        position += orbit * orbitStrength * (.07 + .14 * life);
+        position += orbit * orbitStrength * uMix * (.07 + .14 * life);
+        vec2 cursor = uPointer * vec2(1.35, .82);
+        vec2 cursorDelta = position.xy - cursor;
+        float cursorDistance = max(length(cursorDelta), .08);
+        float cursorInfluence = (1. - smoothstep(.15, 1.1, cursorDistance)) * life;
+        position.xy += vec2(-cursorDelta.y, cursorDelta.x) / cursorDistance * cursorInfluence * .12;
 
         vColor = color;
-        vAlpha = smoothstep(0., .055, progress) * (1. - smoothstep(.9, 1., progress));
+        vAlpha = smoothstep(0., .055, progress) * (1. - smoothstep(.9, 1., progress)) * uEmission;
         vec4 modelViewPosition = modelViewMatrix * vec4(position, 1.);
         gl_Position = projectionMatrix * modelViewPosition;
         gl_PointSize = aSize * (14. / -modelViewPosition.z) * (.78 + life * .58 + orbitStrength * .25);
@@ -111,7 +121,7 @@ function ThreeAtmosphere() {
       }
     `;
 
-    const createEnergyStream = (palette: number[], count: number, size: number, opacity: number, origin: THREE.Vector3, speed: number, bend: number, orbitDirection: number) => {
+    const createEnergyStream = (palette: Array<number | string>, count: number, size: number, opacity: number, origin: THREE.Vector3, speed: number, bend: number, orbitDirection: number, blending: THREE.Blending) => {
       const geometry = new THREE.BufferGeometry();
       const streamPositions = new Float32Array(count * 3);
       const streamColors = new Float32Array(count * 3);
@@ -140,6 +150,9 @@ function ThreeAtmosphere() {
           uSpeed: { value: speed },
           uBend: { value: bend },
           uOrbitDirection: { value: orbitDirection },
+          uEmission: { value: 0 },
+          uMix: { value: 0 },
+          uPointer: { value: new THREE.Vector2() },
           uOrigin: { value: origin },
           uOpacity: { value: opacity },
         },
@@ -148,7 +161,7 @@ function ThreeAtmosphere() {
         vertexColors: true,
         transparent: true,
         depthWrite: false,
-        blending: THREE.AdditiveBlending,
+        blending,
       });
       const points = new THREE.Points(geometry, material);
       points.frustumCulled = false;
@@ -156,8 +169,13 @@ function ThreeAtmosphere() {
       return { geometry, material };
     };
 
-    const divineStream = createEnergyStream([0xffffff, 0xa8ecff, 0x45c8ff], 900, 3.5, 1, new THREE.Vector3(), .16, -.075, 1);
-    const humanStream = createEnergyStream([0xffe08a, 0xf7a92f, 0xff7418], 900, 3.8, .98, new THREE.Vector3(), .145, .07, -1);
+    const divineStream = createEnergyStream(motion.particles.divine, motion.particles.countPerStream, 3.7, 1, new THREE.Vector3(), .16, -.075, 1, THREE.AdditiveBlending);
+    const humanStream = createEnergyStream(motion.particles.human, motion.particles.countPerStream, 3.5, .82, new THREE.Vector3(), .145, .07, -1, THREE.NormalBlending);
+
+    const particlePhase = { emission: reduceMotion ? 1 : 0, mix: reduceMotion ? 1 : 0 };
+    const particleTimeline = reduceMotion ? null : gsap.timeline()
+      .to(particlePhase, { emission: 1, duration: .45, ease: "power2.out" }, motion.timeline.particlesStart)
+      .to(particlePhase, { mix: 1, duration: 1.5, ease: "power2.inOut" }, motion.timeline.mixStart);
 
     const viewportToWorld = (x: number, y: number) => {
       const visibleHeight = 2 * Math.tan(THREE.MathUtils.degToRad(camera.fov / 2)) * camera.position.z;
@@ -241,6 +259,13 @@ function ThreeAtmosphere() {
       orbitGroup.rotation.x = eased.y * .06;
       divineStream.material.uniforms.uTime.value = time;
       humanStream.material.uniforms.uTime.value = time;
+      divineStream.material.uniforms.uEmission.value = particlePhase.emission;
+      humanStream.material.uniforms.uEmission.value = particlePhase.emission;
+      divineStream.material.uniforms.uMix.value = particlePhase.mix;
+      humanStream.material.uniforms.uMix.value = particlePhase.mix;
+      divineStream.material.uniforms.uPointer.value.copy(eased);
+      humanStream.material.uniforms.uPointer.value.copy(eased);
+      orbitGroup.visible = particlePhase.mix > .12;
       renderer.render(scene, camera);
       if (!reduceMotion) animation = requestAnimationFrame(render);
     };
@@ -260,6 +285,7 @@ function ThreeAtmosphere() {
       cancelAnimationFrame(animation);
       window.removeEventListener("pointermove", onPointer);
       window.removeEventListener("resize", resize);
+      particleTimeline?.kill();
       dustGeometry.dispose();
       dustMaterial.dispose();
       divineStream.geometry.dispose();
@@ -380,38 +406,37 @@ function ThreeLogo() {
 
 export default function Home() {
   const root = useRef<HTMLElement>(null);
-  const [ready, setReady] = useState(false);
   const [entering, setEntering] = useState(false);
 
   useEffect(() => {
     if (!root.current) return;
-    const frame = requestAnimationFrame(() => setReady(true));
     const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     const context = gsap.context(() => {
       if (reduceMotion) {
         gsap.set([".hands", ".floating-logo", ".logo-sparkles", ".three-atmosphere"], { opacity: 1 });
-        gsap.set([".hand-left", ".hand-right", ".three-logo"], { clearProps: "transform" });
+        gsap.set([".hand-left", ".hand-right", ".three-logo", ".hero-title h1", ".hero-title p"], { opacity: 1, clearProps: "transform" });
         gsap.set(".logo-aura", { opacity: .72, scale: 1 });
         return;
       }
 
       gsap.timeline({ defaults: { ease: "power3.out" } })
-        .fromTo(".hands", { opacity: 0 }, { opacity: 1, duration: 1.2 }, 0)
-        .fromTo(".hand-left", { xPercent: -7, yPercent: 5, rotation: -1.2 }, { xPercent: 0, yPercent: 0, rotation: 0, duration: 1.2 }, 0)
-        .fromTo(".hand-right", { xPercent: 7, yPercent: -5, rotation: -1.1 }, { xPercent: 0, yPercent: 0, rotation: 0, duration: 1.2 }, 0)
-        .fromTo(".three-atmosphere", { opacity: 0 }, { opacity: 1, duration: 1.25 }, .42)
-        .fromTo(".floating-logo", { opacity: 0 }, { opacity: 1, duration: 1 }, 1)
-        .fromTo(".three-logo", { scale: .8 }, { scale: 1, duration: 1, ease: "back.out(1.55)", clearProps: "transform" }, 1)
-        .fromTo(".logo-aura", { opacity: 0, scale: .72 }, { opacity: .72, scale: 1, duration: .9 }, 1)
-        .fromTo(".logo-sparkles", { opacity: 0 }, { opacity: 1, duration: .7 }, 1.18);
+        .fromTo(".hands", { opacity: 0 }, { opacity: 1, duration: motion.timeline.handsDuration, ease: "power2.out" }, 0)
+        .fromTo(".hand-left", { xPercent: -10, yPercent: 8, rotation: -2.5 }, { xPercent: 0, yPercent: 0, rotation: 0, duration: motion.timeline.handsDuration, ease: "power2.out" }, 0)
+        .fromTo(".hand-right", { xPercent: 10, yPercent: -8, rotation: -2.25 }, { xPercent: 0, yPercent: 0, rotation: 0, duration: motion.timeline.handsDuration, ease: "power2.out" }, 0)
+        .fromTo(".three-atmosphere", { opacity: 0 }, { opacity: 1, duration: .55 }, motion.timeline.particlesStart)
+        .fromTo(".floating-logo", { opacity: 0 }, { opacity: 1, duration: .4 }, motion.timeline.logoStart)
+        .fromTo(".three-logo", { opacity: 0, scale: .02, filter: "blur(14px) brightness(1.8)" }, { opacity: 1, scale: 1, filter: "blur(0px) brightness(1)", duration: 1.35, ease: "back.out(1.8)", clearProps: "transform,filter" }, motion.timeline.logoStart)
+        .fromTo(".logo-aura", { opacity: 0, scale: .45 }, { opacity: .8, scale: 1, duration: 1.1 }, motion.timeline.logoStart + .15)
+        .fromTo(".logo-sparkles", { opacity: 0, scale: .72 }, { opacity: 1, scale: 1, duration: .85 }, motion.timeline.logoStart + .2)
+        .fromTo(".hero-title h1", { opacity: 0, y: -20 }, { opacity: 1, y: 0, duration: .72 }, motion.timeline.headerStart)
+        .fromTo(".hero-title p", { opacity: 0, y: -12 }, { opacity: 1, y: 0, duration: .68 }, motion.timeline.headerStart + .12);
 
-      gsap.to(".logo-aura", { opacity: .98, scale: 1.2, duration: 1.55, delay: 2, repeat: -1, yoyo: true, ease: "sine.inOut" });
-      gsap.to(".hand-left", { xPercent: .5, yPercent: -.28, rotation: .15, duration: 3.5, delay: 1.25, repeat: -1, yoyo: true, ease: "sine.inOut" });
-      gsap.to(".hand-right", { xPercent: -.5, yPercent: .28, rotation: .15, duration: 3.5, delay: 1.25, repeat: -1, yoyo: true, ease: "sine.inOut" });
+      gsap.to(".logo-aura", { opacity: 1, scale: 1.2, duration: 1.55, delay: motion.timeline.complete, repeat: -1, yoyo: true, ease: "sine.inOut" });
+      gsap.to(".hand-left", { xPercent: .42, yPercent: -.24, rotation: .12, duration: 3.5, delay: motion.timeline.handsDuration, repeat: -1, yoyo: true, ease: "sine.inOut" });
+      gsap.to(".hand-right", { xPercent: -.42, yPercent: .24, rotation: .12, duration: 3.5, delay: motion.timeline.handsDuration, repeat: -1, yoyo: true, ease: "sine.inOut" });
     }, root);
 
     return () => {
-      cancelAnimationFrame(frame);
       context.revert();
     };
   }, []);
@@ -430,12 +455,13 @@ export default function Home() {
 
   function enterV1() {
     if (entering) return;
-    setEntering(true);
-    window.setTimeout(() => window.location.assign("/v1"), 700);
+    gsap.to(".three-logo", { scale: motion.logo.clickScale, duration: .15, repeat: 1, yoyo: true, ease: "power2.inOut" });
+    window.setTimeout(() => setEntering(true), 310);
+    window.setTimeout(() => window.location.assign("/v1"), 980);
   }
 
   return (
-    <main ref={root} className={`minimal-creation ${ready ? "ready" : ""} ${entering ? "entering" : ""}`} onPointerMove={trackPointer}>
+    <main ref={root} className={`minimal-creation ${entering ? "entering" : ""}`} onPointerMove={trackPointer}>
       <div className="paper-grain" aria-hidden="true" />
       <div className="dot-field" aria-hidden="true" />
       <ThreeAtmosphere />
