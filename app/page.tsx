@@ -50,7 +50,6 @@ function ThreeAtmosphere() {
       uniform float uTime;
       uniform float uSpeed;
       uniform float uBend;
-      uniform float uOrbitDirection;
       uniform float uEmission;
       uniform float uMix;
       uniform vec2 uPointer;
@@ -90,12 +89,8 @@ function ThreeAtmosphere() {
         vec3 turbulence = curlNoise(fieldPosition);
         vec3 position = base;
         position += aOffset * (1. - eased) * .34;
-        position += turbulence * (.035 + life * .22);
+        position += turbulence * (.045 + life * .28);
         position.y += uBend * life;
-        float orbitStrength = smoothstep(.55, .94, progress);
-        float orbitAngle = aSeed * 6.2831853 + progress * 8.8 * uOrbitDirection + uTime * .46;
-        vec3 orbit = vec3(cos(orbitAngle), sin(orbitAngle) * .68, sin(orbitAngle * .7) * .18);
-        position += orbit * orbitStrength * uMix * (.07 + .14 * life);
         vec2 cursor = uPointer * vec2(1.35, .82);
         vec2 cursorDelta = position.xy - cursor;
         float cursorDistance = max(length(cursorDelta), .08);
@@ -106,7 +101,7 @@ function ThreeAtmosphere() {
         vAlpha = smoothstep(0., .055, progress) * (1. - smoothstep(.9, 1., progress)) * uEmission;
         vec4 modelViewPosition = modelViewMatrix * vec4(position, 1.);
         gl_Position = projectionMatrix * modelViewPosition;
-        gl_PointSize = aSize * (14. / -modelViewPosition.z) * (.78 + life * .58 + orbitStrength * .25);
+        gl_PointSize = aSize * (14. / -modelViewPosition.z) * (.8 + life * .7);
       }
     `;
     const streamFragmentShader = `
@@ -121,7 +116,7 @@ function ThreeAtmosphere() {
       }
     `;
 
-    const createEnergyStream = (palette: Array<number | string>, count: number, size: number, opacity: number, origin: THREE.Vector3, speed: number, bend: number, orbitDirection: number, blending: THREE.Blending) => {
+    const createEnergyStream = (palette: Array<number | string>, count: number, size: number, opacity: number, origin: THREE.Vector3, speed: number, bend: number, blending: THREE.Blending) => {
       const geometry = new THREE.BufferGeometry();
       const streamPositions = new Float32Array(count * 3);
       const streamColors = new Float32Array(count * 3);
@@ -131,9 +126,9 @@ function ThreeAtmosphere() {
       for (let i = 0; i < count; i += 1) {
         seeds[i] = Math.random();
         sizes[i] = size * (.55 + Math.random() * .9);
-        offsets[i * 3] = (Math.random() - .5) * .46;
-        offsets[i * 3 + 1] = (Math.random() - .5) * .46;
-        offsets[i * 3 + 2] = (Math.random() - .5) * .5;
+        offsets[i * 3] = (Math.random() - .5) * .62;
+        offsets[i * 3 + 1] = (Math.random() - .5) * .62;
+        offsets[i * 3 + 2] = (Math.random() - .5) * .58;
         const color = new THREE.Color(palette[i % palette.length]);
         streamColors[i * 3] = color.r;
         streamColors[i * 3 + 1] = color.g;
@@ -149,7 +144,6 @@ function ThreeAtmosphere() {
           uTime: { value: 0 },
           uSpeed: { value: speed },
           uBend: { value: bend },
-          uOrbitDirection: { value: orbitDirection },
           uEmission: { value: 0 },
           uMix: { value: 0 },
           uPointer: { value: new THREE.Vector2() },
@@ -169,8 +163,8 @@ function ThreeAtmosphere() {
       return { geometry, material };
     };
 
-    const divineStream = createEnergyStream(motion.particles.divine, motion.particles.countPerStream, 3.7, 1, new THREE.Vector3(), .16, -.075, 1, THREE.AdditiveBlending);
-    const humanStream = createEnergyStream(motion.particles.human, motion.particles.countPerStream, 3.5, .82, new THREE.Vector3(), .145, .07, -1, THREE.NormalBlending);
+    const divineStream = createEnergyStream(motion.particles.divine, motion.particles.countPerStream, 3.7, 1, new THREE.Vector3(), .19, -.075, THREE.AdditiveBlending);
+    const humanStream = createEnergyStream(motion.particles.human, motion.particles.countPerStream, 3.5, .82, new THREE.Vector3(), .175, .07, THREE.NormalBlending);
 
     const particlePhase = { emission: reduceMotion ? 1 : 0, mix: reduceMotion ? 1 : 0 };
     const particleTimeline = reduceMotion ? null : gsap.timeline()
@@ -213,28 +207,6 @@ function ThreeAtmosphere() {
     halo.position.set(0, 0, -.35);
     scene.add(halo);
 
-    const orbitGroup = new THREE.Group();
-    orbitGroup.position.set(0, 0, 0);
-    for (let ring = 0; ring < 3; ring += 1) {
-      const geometry = new THREE.BufferGeometry();
-      const count = 120 + ring * 36;
-      const ringPositions = new Float32Array(count * 3);
-      const radius = .82 + ring * .27;
-      for (let i = 0; i < count; i += 1) {
-        const angle = (i / count) * Math.PI * 2;
-        ringPositions[i * 3] = Math.cos(angle) * radius;
-        ringPositions[i * 3 + 1] = Math.sin(angle) * radius * .6;
-        ringPositions[i * 3 + 2] = 0;
-      }
-      geometry.setAttribute("position", new THREE.BufferAttribute(ringPositions, 3));
-      const ringColors = [0x59cfff, 0xf7ad32, 0xfff0bb];
-      const material = new THREE.PointsMaterial({ color: ringColors[ring], size: .038 - ring * .006, transparent: true, opacity: .32 - ring * .055, depthWrite: false, blending: THREE.AdditiveBlending });
-      const points = new THREE.Points(geometry, material);
-      points.rotation.z = ring * .3;
-      orbitGroup.add(points);
-    }
-    scene.add(orbitGroup);
-
     const pointer = new THREE.Vector2();
     const eased = new THREE.Vector2();
     const onPointer = (event: globalThis.PointerEvent) => {
@@ -255,8 +227,6 @@ function ThreeAtmosphere() {
       haloMaterial.uniforms.uPointer.value.copy(eased);
       dust.rotation.z = time * .004;
       dust.rotation.y = eased.x * .025;
-      orbitGroup.rotation.z = time * .035;
-      orbitGroup.rotation.x = eased.y * .06;
       divineStream.material.uniforms.uTime.value = time;
       humanStream.material.uniforms.uTime.value = time;
       divineStream.material.uniforms.uEmission.value = particlePhase.emission;
@@ -265,7 +235,6 @@ function ThreeAtmosphere() {
       humanStream.material.uniforms.uMix.value = particlePhase.mix;
       divineStream.material.uniforms.uPointer.value.copy(eased);
       humanStream.material.uniforms.uPointer.value.copy(eased);
-      orbitGroup.visible = particlePhase.mix > .12;
       renderer.render(scene, camera);
       if (!reduceMotion) animation = requestAnimationFrame(render);
     };
@@ -294,11 +263,6 @@ function ThreeAtmosphere() {
       humanStream.material.dispose();
       halo.geometry.dispose();
       haloMaterial.dispose();
-      orbitGroup.children.forEach((child) => {
-        const points = child as THREE.Points;
-        points.geometry.dispose();
-        (points.material as THREE.Material).dispose();
-      });
       renderer.dispose();
       renderer.domElement.remove();
     };

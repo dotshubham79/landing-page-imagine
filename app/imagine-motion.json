@@ -9,7 +9,7 @@
     "complete": 4.5
   },
   "particles": {
-    "countPerStream": 1000,
+    "countPerStream": 1600,
     "divine": ["#e2b043", "#fff1b0", "#ffffff"],
     "human": ["#2a2a2a", "#8c8c8c", "#e5e5e5"]
   },
