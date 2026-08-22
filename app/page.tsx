@@ -958,13 +958,10 @@ export default function Home() {
       <section ref={teamLayer} className="team-reveal" role="dialog" aria-modal="true" aria-label="The people making IMAGINE possible" aria-hidden={!teamOpen}>
         <button className="team-portrait" type="button" onClick={advanceTeamImage} aria-label="Show the next photograph">
           {teamImages.map((source, index) => (
-            <img
-              key={source}
-              className={index === teamImageIndex ? "is-active" : ""}
-              src={source}
-              alt=""
-              aria-hidden={index !== teamImageIndex}
-            />
+            <span key={source} className={`team-slide ${index === teamImageIndex ? "is-active" : ""}`} aria-hidden={index !== teamImageIndex}>
+              <img className="team-slide-backdrop" src={source} alt="" />
+              <img className="team-slide-photo" src={source} alt="" />
+            </span>
           ))}
           <span className="team-slide-count" aria-hidden="true">0{teamImageIndex + 1} / 0{teamImages.length}</span>
         </button>
