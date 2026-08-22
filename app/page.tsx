@@ -887,7 +887,7 @@ export default function Home() {
     if (entering || teamOpen) return;
     gsap.to(".three-logo", { scale: motion.logo.clickScale, duration: .15, repeat: 1, yoyo: true, ease: "power2.inOut" });
     window.setTimeout(() => setEntering(true), 310);
-    window.setTimeout(() => window.location.assign("/v1"), 980);
+    window.setTimeout(() => window.location.assign("https://imagine-lab.tech"), 980);
   }
 
   function openTeam() {
