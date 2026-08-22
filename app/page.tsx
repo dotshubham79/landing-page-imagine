@@ -381,17 +381,17 @@ function FingertipParticles() {
     renderer.outputColorSpace = THREE.SRGBColorSpace;
     host.appendChild(renderer.domElement);
 
-    const particleCount = 260;
+    const particleCount = 360;
     const geometry = new THREE.BufferGeometry();
     const positions = new Float32Array(particleCount * 3);
     const colors = new Float32Array(particleCount * 3);
     const seeds = new Float32Array(particleCount);
     const spread = new Float32Array(particleCount);
-    const warm = [new THREE.Color(0xff8a1f), new THREE.Color(0xffaa33), new THREE.Color(0xffd56a)];
-    const cool = [new THREE.Color(0x43cfff), new THREE.Color(0x88e1ff), new THREE.Color(0xe8fbff)];
+    const warm = [new THREE.Color(0x7c6049), new THREE.Color(0xb1885f), new THREE.Color(0xe5cfad)];
+    const cool = [new THREE.Color(0xd19f45), new THREE.Color(0xf0c76d), new THREE.Color(0xfff0c4)];
     for (let i = 0; i < particleCount; i += 1) {
       seeds[i] = Math.random();
-      spread[i] = .025 + Math.random() * .075;
+      spread[i] = .045 + Math.random() * .12;
       const palette = i % 2 === 0 ? cool : warm;
       const color = palette[i % palette.length];
       colors[i * 3] = color.r;
@@ -408,19 +408,21 @@ function FingertipParticles() {
     if (textureContext) {
       const gradient = textureContext.createRadialGradient(32, 32, 0, 32, 32, 32);
       gradient.addColorStop(0, "rgba(255,255,255,1)");
-      gradient.addColorStop(.3, "rgba(255,255,255,.9)");
+      gradient.addColorStop(.48, "rgba(255,255,255,1)");
+      gradient.addColorStop(.72, "rgba(255,255,255,.72)");
       gradient.addColorStop(1, "rgba(255,255,255,0)");
       textureContext.fillStyle = gradient;
       textureContext.fillRect(0, 0, 64, 64);
     }
     const texture = new THREE.CanvasTexture(textureCanvas);
     const material = new THREE.PointsMaterial({
-      size: .075,
+      size: .032,
       vertexColors: true,
       map: texture,
       transparent: true,
-      opacity: .96,
-      blending: THREE.AdditiveBlending,
+      opacity: .9,
+      alphaTest: .035,
+      blending: THREE.NormalBlending,
       depthWrite: false,
       sizeAttenuation: true,
     });
@@ -470,15 +472,15 @@ function FingertipParticles() {
 
       const attribute = geometry.getAttribute("position") as THREE.BufferAttribute;
       for (let i = 0; i < particleCount; i += 1) {
-        const progress = (seeds[i] + time * .22) % 1;
-        const easedProgress = progress * progress * (3 - 2 * progress);
+        const progress = (seeds[i] + time * .145) % 1;
+        const easedProgress = 1 - Math.pow(1 - progress, 1.65);
         const origin = i % 2 === 0 ? divineOrigin : humanOrigin;
         const envelope = 1 - progress;
         attribute.setXYZ(
           i,
-          origin.x * (1 - easedProgress) + Math.sin(time * 2.6 + i) * spread[i] * .24 * envelope,
-          origin.y * (1 - easedProgress) + Math.sin(time * 3.1 + i * .73) * spread[i] * envelope,
-          Math.cos(time * 2.2 + i * .41) * spread[i] * .7 * envelope,
+          origin.x * (1 - easedProgress) + Math.sin(i * 1.73 + time * .7) * spread[i] * .42 * envelope,
+          origin.y * (1 - easedProgress) + Math.cos(i * 2.11 + time * .9) * spread[i] * envelope,
+          Math.sin(i * 1.31 + time * .55) * spread[i] * .5 * envelope,
         );
       }
       attribute.needsUpdate = true;
