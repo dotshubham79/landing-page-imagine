@@ -38,11 +38,15 @@ button { color: inherit; font: inherit; }
 
 .hands { position: absolute; z-index: 2; inset: 0; opacity: 0; }
 .hand { position: absolute; inset: -2%; will-change: transform; }
+.hand-art { position: absolute; inset: 0; transition: transform .8s ease-out; }
 .hand img { width: 100%; height: 100%; display: block; object-fit: cover; object-position: center; user-select: none; }
 .hand-left { clip-path: polygon(0 0,50.7% 0,50.7% 100%,0 100%); transform-origin: 8% 88%; }
 .hand-right { clip-path: polygon(49.3% 0,100% 0,100% 100%,49.3% 100%); transform-origin: 92% 12%; }
-.hand-left img { transform: translate(var(--left-hand-x),var(--left-hand-y)) scale(1.025); transition: transform .8s ease-out; }
-.hand-right img { transform: translate(var(--right-hand-x),var(--right-hand-y)) scale(1.025); transition: transform .8s ease-out; }
+.hand-left .hand-art { transform: translate(var(--left-hand-x),var(--left-hand-y)) scale(1.025); }
+.hand-right .hand-art { transform: translate(var(--right-hand-x),var(--right-hand-y)) scale(1.025); }
+.fingertip-anchor { position: absolute; width: 2px; height: 2px; pointer-events: none; opacity: 0; }
+.fingertip-human { left: 42.5%; top: 50.5%; }
+.fingertip-divine { left: 56.5%; top: 41.5%; }
 .hands::after { content: ""; position: absolute; inset: 0; pointer-events: none; background: linear-gradient(to bottom,rgba(251,246,234,.53),transparent 29%,transparent 76%,rgba(251,246,234,.22)); }
 
 .hero-title { position: fixed; z-index: 7; left: 50%; top: clamp(32px,7vh,72px); width: min(760px,84vw); text-align: center; transform: translateX(-50%); }

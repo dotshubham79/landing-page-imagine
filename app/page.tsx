@@ -227,8 +227,19 @@ function ThreeAtmosphere() {
       return new THREE.Vector3((x - .5) * visibleWidth, (.5 - y) * visibleHeight, 0);
     };
     const alignStreamsToFingertips = () => {
-      divineOrigin.copy(viewportToWorld(.565, .415));
-      humanOrigin.copy(viewportToWorld(.425, .505));
+      const hostBounds = host.getBoundingClientRect();
+      const divineTip = document.querySelector<HTMLElement>("[data-fingertip='divine']");
+      const humanTip = document.querySelector<HTMLElement>("[data-fingertip='human']");
+      const readTip = (node: HTMLElement | null, fallbackX: number, fallbackY: number) => {
+        if (!node || !hostBounds.width || !hostBounds.height) return viewportToWorld(fallbackX, fallbackY);
+        const bounds = node.getBoundingClientRect();
+        return viewportToWorld(
+          (bounds.left + bounds.width / 2 - hostBounds.left) / hostBounds.width,
+          (bounds.top + bounds.height / 2 - hostBounds.top) / hostBounds.height,
+        );
+      };
+      divineOrigin.copy(readTip(divineTip, .565, .415));
+      humanOrigin.copy(readTip(humanTip, .425, .505));
     };
     alignStreamsToFingertips();
 
@@ -270,6 +281,7 @@ function ThreeAtmosphere() {
     const render = () => {
       const time = clock.getElapsedTime();
       eased.lerp(pointer, .035);
+      alignStreamsToFingertips();
       camera.position.x = eased.x * .16;
       camera.position.y = eased.y * .1;
       camera.lookAt(0, -.15, 0);
@@ -510,8 +522,18 @@ export default function Home() {
       <ThreeAtmosphere />
 
       <div className="hands" aria-hidden="true">
-        <div className="hand hand-left"><img src="/imagine-hands-transparent-v10.png" alt="" /></div>
-        <div className="hand hand-right"><img src="/imagine-hands-transparent-v10.png" alt="" /></div>
+        <div className="hand hand-left" id="hand-human">
+          <div className="hand-art">
+            <img src="/imagine-hands-transparent-v10.png" alt="" />
+            <span className="fingertip-anchor fingertip-human" data-fingertip="human" />
+          </div>
+        </div>
+        <div className="hand hand-right" id="hand-divine">
+          <div className="hand-art">
+            <img src="/imagine-hands-transparent-v10.png" alt="" />
+            <span className="fingertip-anchor fingertip-divine" data-fingertip="divine" />
+          </div>
+        </div>
       </div>
 
       <header className="hero-title">
