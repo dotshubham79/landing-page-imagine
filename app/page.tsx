@@ -1,6 +1,7 @@
 "use client";
 
 import { PointerEvent, useEffect, useRef, useState } from "react";
+import { gsap } from "gsap";
 import * as THREE from "three";
 
 function ThreeAtmosphere() {
@@ -47,41 +48,44 @@ function ThreeAtmosphere() {
     if (sparkleContext) {
       const gradient = sparkleContext.createRadialGradient(32, 32, 0, 32, 32, 32);
       gradient.addColorStop(0, "rgba(255,255,255,1)");
-      gradient.addColorStop(.2, "rgba(255,223,142,.95)");
-      gradient.addColorStop(1, "rgba(255,190,54,0)");
+      gradient.addColorStop(.2, "rgba(255,255,255,.95)");
+      gradient.addColorStop(1, "rgba(255,255,255,0)");
       sparkleContext.fillStyle = gradient;
       sparkleContext.fillRect(0, 0, 64, 64);
     }
     const sparkleTexture = new THREE.CanvasTexture(sparkleCanvas);
-    const energyCount = 112;
-    const energyGeometry = new THREE.BufferGeometry();
-    const energyPositions = new Float32Array(energyCount * 3);
-    const energyColors = new Float32Array(energyCount * 3);
-    const energySeeds = new Float32Array(energyCount);
-    const energyWiggle = new Float32Array(energyCount);
-    const leftGold = new THREE.Color(0xf3a931);
-    const rightGold = new THREE.Color(0xffd889);
-    for (let i = 0; i < energyCount; i += 1) {
-      energySeeds[i] = Math.random();
-      energyWiggle[i] = (Math.random() - .5) * .28;
-      const color = i % 2 ? leftGold : rightGold;
-      energyColors[i * 3] = color.r;
-      energyColors[i * 3 + 1] = color.g;
-      energyColors[i * 3 + 2] = color.b;
-    }
-    energyGeometry.setAttribute("position", new THREE.BufferAttribute(energyPositions, 3));
-    energyGeometry.setAttribute("color", new THREE.BufferAttribute(energyColors, 3));
-    const energyMaterial = new THREE.PointsMaterial({
-      size: .075,
-      map: sparkleTexture,
-      vertexColors: true,
-      transparent: true,
-      opacity: .78,
-      depthWrite: false,
-      blending: THREE.AdditiveBlending,
-    });
-    const energy = new THREE.Points(energyGeometry, energyMaterial);
-    scene.add(energy);
+    const createEnergyStream = (palette: number[], count: number, size: number, opacity: number) => {
+      const geometry = new THREE.BufferGeometry();
+      const streamPositions = new Float32Array(count * 3);
+      const streamColors = new Float32Array(count * 3);
+      const seeds = new Float32Array(count);
+      const wiggles = new Float32Array(count);
+      for (let i = 0; i < count; i += 1) {
+        seeds[i] = Math.random();
+        wiggles[i] = .045 + Math.random() * .16;
+        const color = new THREE.Color(palette[i % palette.length]);
+        streamColors[i * 3] = color.r;
+        streamColors[i * 3 + 1] = color.g;
+        streamColors[i * 3 + 2] = color.b;
+      }
+      geometry.setAttribute("position", new THREE.BufferAttribute(streamPositions, 3));
+      geometry.setAttribute("color", new THREE.BufferAttribute(streamColors, 3));
+      const material = new THREE.PointsMaterial({
+        size,
+        map: sparkleTexture,
+        vertexColors: true,
+        transparent: true,
+        opacity,
+        depthWrite: false,
+        blending: THREE.AdditiveBlending,
+      });
+      const points = new THREE.Points(geometry, material);
+      scene.add(points);
+      return { geometry, material, seeds, wiggles, count };
+    };
+
+    const divineStream = createEnergyStream([0xffffff, 0xc8f5ff, 0x79d9ff], 72, .072, .9);
+    const humanStream = createEnergyStream([0xffd36c, 0xf7a92f, 0xff7a21], 72, .078, .86);
 
     const haloMaterial = new THREE.ShaderMaterial({
       transparent: true,
@@ -151,21 +155,30 @@ function ThreeAtmosphere() {
       dust.rotation.y = eased.x * .025;
       orbitGroup.rotation.z = time * .035;
       orbitGroup.rotation.x = eased.y * .06;
-      const energyAttribute = energyGeometry.getAttribute("position") as THREE.BufferAttribute;
-      for (let i = 0; i < energyCount; i += 1) {
-        const progress = (energySeeds[i] + time * .13) % 1;
-        const easedProgress = progress * progress * (3 - 2 * progress);
-        const fromRight = i % 2 === 0;
-        const originX = fromRight ? 2.12 : -2.12;
-        const originY = fromRight ? .3 : -.24;
-        energyAttribute.setXYZ(
-          i,
-          originX * (1 - easedProgress),
-          originY * (1 - easedProgress) + Math.sin(progress * Math.PI * 2 + i) * energyWiggle[i] * (1 - progress),
-          Math.sin(i * 1.91) * .1,
-        );
-      }
-      energyAttribute.needsUpdate = true;
+      const updateStream = (
+        stream: typeof divineStream,
+        originX: number,
+        originY: number,
+        speed: number,
+        bend: number,
+      ) => {
+        const attribute = stream.geometry.getAttribute("position") as THREE.BufferAttribute;
+        for (let i = 0; i < stream.count; i += 1) {
+          const progress = (stream.seeds[i] + time * speed) % 1;
+          const easedProgress = progress * progress * (3 - 2 * progress);
+          const envelope = 1 - progress;
+          attribute.setXYZ(
+            i,
+            originX * envelope,
+            originY * envelope + Math.sin(progress * Math.PI) * bend + Math.sin(progress * Math.PI * 4 + i) * stream.wiggles[i] * envelope,
+            Math.sin(i * 1.91) * .1 * envelope,
+          );
+          if (easedProgress > .94) attribute.setZ(i, 0);
+        }
+        attribute.needsUpdate = true;
+      };
+      updateStream(divineStream, 2.12, .46, .16, -.11);
+      updateStream(humanStream, -2.12, -.38, .145, .1);
       renderer.render(scene, camera);
       if (!reduceMotion) animation = requestAnimationFrame(render);
     };
@@ -186,8 +199,10 @@ function ThreeAtmosphere() {
       window.removeEventListener("resize", resize);
       dustGeometry.dispose();
       dustMaterial.dispose();
-      energyGeometry.dispose();
-      energyMaterial.dispose();
+      divineStream.geometry.dispose();
+      divineStream.material.dispose();
+      humanStream.geometry.dispose();
+      humanStream.material.dispose();
       sparkleTexture.dispose();
       halo.geometry.dispose();
       haloMaterial.dispose();
@@ -307,8 +322,36 @@ export default function Home() {
   const [entering, setEntering] = useState(false);
 
   useEffect(() => {
+    if (!root.current) return;
     const frame = requestAnimationFrame(() => setReady(true));
-    return () => cancelAnimationFrame(frame);
+    const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const context = gsap.context(() => {
+      if (reduceMotion) {
+        gsap.set([".hands", ".floating-logo", ".logo-sparkles", ".three-atmosphere"], { opacity: 1 });
+        gsap.set([".hand-left", ".hand-right", ".three-logo"], { clearProps: "transform" });
+        gsap.set(".logo-aura", { opacity: .72, scale: 1 });
+        return;
+      }
+
+      gsap.timeline({ defaults: { ease: "power3.out" } })
+        .fromTo(".hands", { opacity: 0 }, { opacity: 1, duration: 1.2 }, 0)
+        .fromTo(".hand-left", { xPercent: -7, yPercent: 5, rotation: -1.2 }, { xPercent: 0, yPercent: 0, rotation: 0, duration: 1.2 }, 0)
+        .fromTo(".hand-right", { xPercent: 7, yPercent: -5, rotation: -1.1 }, { xPercent: 0, yPercent: 0, rotation: 0, duration: 1.2 }, 0)
+        .fromTo(".three-atmosphere", { opacity: 0 }, { opacity: 1, duration: 1.25 }, .42)
+        .fromTo(".floating-logo", { opacity: 0 }, { opacity: 1, duration: 1 }, 1)
+        .fromTo(".three-logo", { scale: .8 }, { scale: 1, duration: 1, ease: "back.out(1.55)", clearProps: "transform" }, 1)
+        .fromTo(".logo-aura", { opacity: 0, scale: .72 }, { opacity: .72, scale: 1, duration: .9 }, 1)
+        .fromTo(".logo-sparkles", { opacity: 0 }, { opacity: 1, duration: .7 }, 1.18);
+
+      gsap.to(".logo-aura", { opacity: .98, scale: 1.2, duration: 1.55, delay: 2, repeat: -1, yoyo: true, ease: "sine.inOut" });
+      gsap.to(".hand-left", { xPercent: .5, yPercent: -.28, rotation: .15, duration: 3.5, delay: 1.25, repeat: -1, yoyo: true, ease: "sine.inOut" });
+      gsap.to(".hand-right", { xPercent: -.5, yPercent: .28, rotation: .15, duration: 3.5, delay: 1.25, repeat: -1, yoyo: true, ease: "sine.inOut" });
+    }, root);
+
+    return () => {
+      cancelAnimationFrame(frame);
+      context.revert();
+    };
   }, []);
 
   function trackPointer(event: PointerEvent<HTMLElement>) {
@@ -350,6 +393,7 @@ export default function Home() {
       </div>
 
       <button className="floating-logo" type="button" onClick={enterV1} aria-label="Enter IMAGINE V1">
+        <span className="logo-aura" aria-hidden="true" />
         <ThreeLogo />
       </button>
 
