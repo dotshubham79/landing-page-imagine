@@ -547,8 +547,9 @@ function TeamParticleTransition() {
       host.appendChild(renderer.domElement);
 
       const sampleCanvas = document.createElement("canvas");
-      const sampleWidth = 192;
-      const sampleHeight = 108;
+      const sourceAspect = image.naturalWidth / image.naturalHeight;
+      const sampleHeight = 168;
+      const sampleWidth = Math.max(72, Math.round(sampleHeight * sourceAspect));
       sampleCanvas.width = sampleWidth;
       sampleCanvas.height = sampleHeight;
       const sampleContext = sampleCanvas.getContext("2d", { willReadFrequently: true });
@@ -560,7 +561,8 @@ function TeamParticleTransition() {
       const starts: number[] = [];
       const scatters: number[] = [];
       const colors: number[] = [];
-      const imageScale = Math.min(aspect * 2, 3.55);
+      const targetHeight = 1.72;
+      const targetWidth = targetHeight * sourceAspect;
       for (let y = 0; y < sampleHeight; y += 2) {
         for (let x = 0; x < sampleWidth; x += 2) {
           const pixel = (y * sampleWidth + x) * 4;
@@ -572,8 +574,8 @@ function TeamParticleTransition() {
           const portraitDetail = (255 - average) * .85 + range;
           if (portraitDetail < 31 && Math.random() > .035) continue;
 
-          const targetX = (x / sampleWidth - .5) * imageScale;
-          const targetY = (.5 - y / sampleHeight) * 1.78;
+          const targetX = (x / sampleWidth - .5) * targetWidth;
+          const targetY = (.5 - y / sampleHeight) * targetHeight;
           const fromLeft = targetX < 0;
           const sourceX = fromLeft ? -aspect * .55 : aspect * .55;
           const sourceY = fromLeft ? -.06 : .18;
@@ -658,7 +660,7 @@ function TeamParticleTransition() {
       };
       animation = requestAnimationFrame(render);
     };
-    image.src = "/imagine-team-brothers-v1.png";
+    image.src = "/imagine-team-photo-v1.jpg";
 
     return () => {
       disposed = true;
@@ -936,15 +938,13 @@ export default function Home() {
       {teamOpen && <TeamParticleTransition />}
       <section ref={teamLayer} className="team-reveal" role="dialog" aria-modal="true" aria-label="The people making IMAGINE possible" aria-hidden={!teamOpen}>
         <div className="team-portrait" aria-hidden="true">
-          <img src="/imagine-team-brothers-v1.png" alt="" />
+          <img src="/imagine-team-photo-v1.jpg" alt="" />
         </div>
         <button className="team-close" type="button" onClick={closeTeam} aria-label="Return to the IMAGINE landing page">
           <span aria-hidden="true">&#8592;</span> Back to IMAGINE
         </button>
         <div className="team-copy">
-          <p className="team-eyebrow">People making this possible</p>
-          <h2>Shubham <i>&amp;</i> Binayak</h2>
-          <p className="team-statement">Two brothers making the future of imagination.</p>
+          <p className="team-statement">Two brothers driving the interaction with AI.</p>
         </div>
       </section>
 

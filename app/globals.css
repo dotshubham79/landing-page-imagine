@@ -66,16 +66,12 @@ button { color: inherit; font: inherit; }
 
 .team-particle-transition { position: fixed; z-index: 26; inset: 0; pointer-events: none; }
 .team-particle-transition canvas { width: 100%; height: 100%; display: block; }
-.team-reveal { position: fixed; z-index: 20; inset: 0; overflow: hidden; visibility: hidden; opacity: 0; background: #f5eddd; }
-.team-reveal::after { content: ""; position: absolute; z-index: 2; inset: 0; pointer-events: none; background: radial-gradient(ellipse at 50% 48%,rgba(252,248,236,.02) 22%,rgba(91,54,17,.16) 100%); mix-blend-mode: multiply; }
-.team-portrait { position: absolute; z-index: 1; inset: 0; overflow: hidden; will-change: transform,filter,clip-path; }
-.team-portrait img { width: 100%; height: 100%; display: block; object-fit: cover; object-position: center; filter: saturate(.84) contrast(.98) brightness(1.03); }
-.team-portrait::after { content: ""; position: absolute; inset: 0; background: linear-gradient(90deg,rgba(248,242,228,.02) 0,rgba(248,242,228,.48) 35%,rgba(248,242,228,.56) 52%,rgba(248,242,228,.18) 74%,transparent 100%); }
-.team-copy { position: absolute; z-index: 4; left: 50%; top: 50%; width: min(560px,60vw); transform: translate(-50%,-46%); text-align: center; }
-.team-eyebrow { margin: 0 0 18px; color: rgba(65,45,27,.62); font: 400 9px/1 var(--mono); letter-spacing: .19em; text-transform: uppercase; }
-.team-copy h2 { margin: 0; color: #172036; font: 720 clamp(38px,4.4vw,72px)/.94 var(--display); letter-spacing: -.045em; }
-.team-copy h2 i { color: #b7873e; font-family: "Instrument Serif",Georgia,serif; font-weight: 400; }
-.team-statement { max-width: 420px; margin: 18px auto 0; color: rgba(23,32,54,.72); font: italic clamp(18px,1.55vw,25px)/1.22 "Playfair Display",Georgia,serif; }
+.team-reveal { position: fixed; z-index: 20; inset: 0; display: grid; place-items: center; overflow: hidden; padding: clamp(52px,7vh,82px) clamp(22px,5vw,72px); visibility: hidden; opacity: 0; background: var(--paper); }
+.team-portrait { position: relative; z-index: 1; height: 100%; max-height: 860px; aspect-ratio: 3/4; overflow: hidden; border-radius: 3px; box-shadow: 0 30px 90px rgba(11,18,31,.19); will-change: transform,filter,clip-path; }
+.team-portrait img { width: 100%; height: 100%; display: block; object-fit: cover; object-position: center; }
+.team-portrait::after { content: ""; position: absolute; inset: 48% 0 0; pointer-events: none; background: linear-gradient(to bottom,transparent,rgba(7,11,18,.08) 44%,rgba(7,11,18,.72)); }
+.team-copy { position: absolute; z-index: 4; left: 50%; bottom: clamp(64px,10vh,106px); width: min(620px,76vw); transform: translateX(-50%); text-align: center; }
+.team-statement { margin: 0; color: #fff; text-shadow: 0 2px 24px rgba(0,0,0,.62); font: italic clamp(20px,1.65vw,28px)/1.2 "Playfair Display",Georgia,serif; }
 .team-close { position: absolute; z-index: 5; top: clamp(26px,4vh,44px); left: clamp(22px,3.2vw,54px); padding: 9px 0; border: 0; background: transparent; color: rgba(23,32,54,.68); cursor: pointer; font: 500 10px/1 var(--mono); letter-spacing: .08em; text-transform: uppercase; transition: color .25s ease,transform .25s ease; }
 .team-close span { display: inline-block; margin-right: 8px; transition: transform .25s ease; }
 .team-close:hover,.team-close:focus-visible { color: #172036; transform: translateX(-2px); }
@@ -92,8 +88,8 @@ button { color: inherit; font: inherit; }
   .hero-title p { margin-top: 8px; font-size: clamp(18px,4vw,23px); }
   .hands { top: 18%; left: -29%; width: 158%; height: 70%; }
   .floating-logo { top: 52%; transform: translate(-50%,-50%) scale(.82); }
-  .team-copy { top: 52%; width: min(560px,76vw); }
-  .team-portrait img { width: 136%; margin-left: -18%; }
+  .team-reveal { padding-inline: 22px; }
+  .team-copy { width: min(560px,76vw); }
 }
 
 @media (max-width: 520px) {
@@ -102,10 +98,9 @@ button { color: inherit; font: inherit; }
   .hero-title p { font-size: 18px; }
   .hands { top: 22%; left: -48%; width: 196%; height: 64%; }
   .floating-logo { top: 53%; transform: translate(-50%,-50%) scale(.68); }
-  .team-copy { top: 52%; width: 84vw; }
-  .team-copy h2 { font-size: clamp(38px,11vw,52px); }
+  .team-reveal { padding-top: 72px; padding-bottom: 72px; }
+  .team-copy { bottom: 92px; width: 76vw; }
   .team-statement { font-size: 18px; }
-  .team-portrait img { width: 190%; margin-left: -45%; }
 }
 
 @media (prefers-reduced-motion: reduce) {
