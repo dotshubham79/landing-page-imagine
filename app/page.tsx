@@ -367,125 +367,6 @@ function ThreeAtmosphere() {
   return <div ref={mount} className="three-atmosphere" aria-hidden="true" />;
 }
 
-function AmbientEffects() {
-  const canvasRef = useRef<HTMLCanvasElement>(null);
-
-  useEffect(() => {
-    const canvas = canvasRef.current;
-    const context = canvas?.getContext("2d");
-    if (!canvas || !context) return;
-
-    const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    const pointer = { x: -1000, y: -1000, active: false };
-    const trail: Array<{ x: number; y: number; alpha: number; size: number }> = [];
-    const moteCount = window.innerWidth < 700 ? 28 : 45;
-    const motes = Array.from({ length: moteCount }, () => ({
-      x: Math.random() * window.innerWidth,
-      y: Math.random() * window.innerHeight,
-      size: Math.random() * 1.55 + .4,
-      color: Math.random() > .48 ? "rgba(183,137,79,.34)" : "rgba(20,28,42,.14)",
-      vx: (Math.random() - .5) * .22,
-      vy: (Math.random() - .5) * .22,
-      pulse: Math.random() * Math.PI * 2,
-    }));
-    let animation = 0;
-    let width = window.innerWidth;
-    let height = window.innerHeight;
-
-    const resize = () => {
-      width = window.innerWidth;
-      height = window.innerHeight;
-      const ratio = Math.min(window.devicePixelRatio, 2);
-      canvas.width = Math.round(width * ratio);
-      canvas.height = Math.round(height * ratio);
-      canvas.style.width = `${width}px`;
-      canvas.style.height = `${height}px`;
-      context.setTransform(ratio, 0, 0, ratio, 0, 0);
-    };
-    const onPointerMove = (event: globalThis.PointerEvent) => {
-      if (event.pointerType !== "mouse") return;
-      pointer.x = event.clientX;
-      pointer.y = event.clientY;
-      pointer.active = true;
-      trail.push({ x: event.clientX, y: event.clientY, alpha: .22, size: Math.random() * 1.8 + .8 });
-      if (trail.length > 42) trail.splice(0, trail.length - 42);
-    };
-    const onPointerLeave = () => {
-      pointer.active = false;
-    };
-
-    const render = () => {
-      context.clearRect(0, 0, width, height);
-      motes.forEach((mote) => {
-        if (!reduceMotion) {
-          if (pointer.active) {
-            const deltaX = pointer.x - mote.x;
-            const deltaY = pointer.y - mote.y;
-            const distance = Math.max(28, Math.hypot(deltaX, deltaY));
-            if (distance < 210) {
-              const gravity = (1 - distance / 210) * .006;
-              mote.vx += deltaX / distance * gravity;
-              mote.vy += deltaY / distance * gravity;
-            }
-          }
-          mote.vx *= .992;
-          mote.vy *= .992;
-          mote.x += mote.vx;
-          mote.y += mote.vy;
-          mote.pulse += .012;
-          if (mote.x < -5) mote.x = width + 5;
-          if (mote.x > width + 5) mote.x = -5;
-          if (mote.y < -5) mote.y = height + 5;
-          if (mote.y > height + 5) mote.y = -5;
-        }
-        context.save();
-        context.globalAlpha = .24 + (Math.sin(mote.pulse) + 1) * .26;
-        context.fillStyle = mote.color;
-        context.beginPath();
-        context.arc(mote.x, mote.y, mote.size, 0, Math.PI * 2);
-        context.fill();
-        context.restore();
-      });
-
-      if (!reduceMotion) {
-        for (let index = trail.length - 1; index >= 0; index -= 1) {
-          const point = trail[index];
-          point.alpha -= .011;
-          point.size *= .965;
-          if (point.alpha <= 0) {
-            trail.splice(index, 1);
-            continue;
-          }
-          context.save();
-          context.globalAlpha = point.alpha;
-          context.fillStyle = "rgba(205,151,52,.7)";
-          context.shadowColor = "rgba(244,195,83,.62)";
-          context.shadowBlur = 7;
-          context.beginPath();
-          context.arc(point.x, point.y, point.size, 0, Math.PI * 2);
-          context.fill();
-          context.restore();
-        }
-        animation = requestAnimationFrame(render);
-      }
-    };
-
-    resize();
-    render();
-    window.addEventListener("resize", resize);
-    window.addEventListener("pointermove", onPointerMove, { passive: true });
-    document.documentElement.addEventListener("pointerleave", onPointerLeave);
-    return () => {
-      cancelAnimationFrame(animation);
-      window.removeEventListener("resize", resize);
-      window.removeEventListener("pointermove", onPointerMove);
-      document.documentElement.removeEventListener("pointerleave", onPointerLeave);
-    };
-  }, []);
-
-  return <canvas ref={canvasRef} className="ambient-effects-canvas" aria-hidden="true" />;
-}
-
 function FingertipParticles() {
   const mount = useRef<HTMLDivElement>(null);
 
@@ -931,8 +812,6 @@ export default function Home() {
       gsap.to(".logo-aura", { opacity: .92, scale: 1.12, duration: 3.6, delay: motion.timeline.complete, repeat: -1, yoyo: true, ease: "sine.inOut" });
       gsap.to(".hand-left", { xPercent: .42, yPercent: -.24, rotation: .12, duration: 3.5, delay: motion.timeline.handsDuration, repeat: -1, yoyo: true, ease: "sine.inOut" });
       gsap.to(".hand-right", { xPercent: -.42, yPercent: .24, rotation: .12, duration: 3.5, delay: motion.timeline.handsDuration, repeat: -1, yoyo: true, ease: "sine.inOut" });
-      gsap.to("#title-imagine span", { y: -5, duration: 3.5, delay: motion.timeline.complete, ease: "sine.inOut", yoyo: true, repeat: -1, stagger: { each: .12, from: "center" } });
-      gsap.to("#subtitle", { letterSpacing: ".24em", opacity: .9, duration: 4.5, delay: motion.timeline.complete, ease: "sine.inOut", yoyo: true, repeat: -1 });
     }, root);
 
     return () => {
@@ -1044,9 +923,6 @@ export default function Home() {
     root.current.style.setProperty("--human-tip-y", `${approach * -1.8}px`);
     root.current.style.setProperty("--logo-x", `${distanceX * .028 * approach}px`);
     root.current.style.setProperty("--logo-y", `${distanceY * .028 * approach}px`);
-    root.current.style.setProperty("--title-tracking", `${.08 - .03 * approach}em`);
-    root.current.style.setProperty("--title-glow", `${approach * 18}px`);
-    root.current.style.setProperty("--title-glow-alpha", `${approach * .5}`);
     root.current.classList.toggle("approaching", approach > .035);
 
     const cursor = { x: event.clientX, y: event.clientY };
@@ -1088,9 +964,6 @@ export default function Home() {
       .to([".connection-line-human", ".connection-line-divine", ".connection-line-cursor"], { opacity: .72, duration: .28 }, 0)
       .to(".three-logo", { scale: 1, duration: .22, clearProps: "transform" }, .34)
       .fromTo(".connection-spark", { opacity: 0, scale: .2 }, { opacity: 1, scale: 1, duration: .24, ease: "back.out(1.8)" }, .52)
-      .call(() => root.current?.querySelector("#title-imagine")?.classList.add("text-ignited"), [], .52)
-      .fromTo("#title-imagine span", { y: -4, scale: 1.04 }, { y: 0, scale: 1, duration: .35, stagger: { each: .05, from: "center" }, ease: "back.out(2)" }, .54)
-      .to("#subtitle", { color: "#0f172a", letterSpacing: ".20em", opacity: 1, duration: .5 }, .54)
       .fromTo(".connection-dust", { opacity: 0, scale: .5, rotation: -8 }, { opacity: .78, scale: 1.08, rotation: 5, duration: .42 }, .56)
       .fromTo(".connection-ripple", { opacity: .55, scale: .25 }, { opacity: 0, scale: 18, duration: .78, ease: "power2.out" }, .58)
       .fromTo(".connection-hand-light", { opacity: 0, scale: .7 }, { opacity: .46, scale: 1.35, duration: .42, yoyo: true, repeat: 1 }, .62)
@@ -1113,9 +986,6 @@ export default function Home() {
     root.current.style.setProperty("--right-hand-y", "0px");
     root.current.style.setProperty("--logo-x", "0px");
     root.current.style.setProperty("--logo-y", "0px");
-    root.current.style.setProperty("--title-tracking", ".08em");
-    root.current.style.setProperty("--title-glow", "0px");
-    root.current.style.setProperty("--title-glow-alpha", "0");
     root.current.querySelectorAll<HTMLElement>(".connection-line").forEach((line) => {
       line.style.opacity = "0";
     });
@@ -1152,10 +1022,9 @@ export default function Home() {
   }
 
   return (
-    <main id="stage" ref={root} className={`minimal-creation ${connecting ? "connecting" : ""} ${entering ? "entering" : ""}`} onPointerMove={trackPointer} onPointerLeave={resetConnection}>
+    <main ref={root} className={`minimal-creation ${connecting ? "connecting" : ""} ${entering ? "entering" : ""}`} onPointerMove={trackPointer} onPointerLeave={resetConnection}>
       <div className="paper-grain" aria-hidden="true" />
       <div className="dot-field" aria-hidden="true" />
-      <AmbientEffects />
       <FingertipParticles />
 
       <button className="team-trigger" type="button" onClick={openTeam} aria-haspopup="dialog" aria-expanded={teamOpen}>
@@ -1188,10 +1057,8 @@ export default function Home() {
       </div>
 
       <header className="hero-title">
-        <h1 id="title-imagine" aria-label="IMAGINE">
-          {"IMAGINE".split("").map((letter, index) => <span key={`${letter}-${index}`} aria-hidden="true">{letter}</span>)}
-        </h1>
-        <p id="subtitle">Where imagination meets intelligence.</p>
+        <h1>IMAGINE</h1>
+        <p>where imagination meets intelligence.</p>
       </header>
 
       <button className="floating-logo" type="button" onPointerDown={(event) => {

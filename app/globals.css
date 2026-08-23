@@ -1,5 +1,4 @@
-@import url("https://api.fontshare.com/v2/css?f[]=satoshi@900,700&f[]=technor@500,600&display=swap");
-@import url("https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,200..800&family=Cinzel:wght@900&family=DM+Mono:wght@300;400&family=Instrument+Serif&family=Playfair+Display:ital,wght@1,400&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,200..800&family=Cinzel:wght@900&family=DM+Mono:wght@300;400&family=Instrument+Serif&family=Playfair+Display:ital,wght@1,400&family=Plus+Jakarta+Sans:wght@900&display=swap");
 
 :root {
   --paper: #f8f6f0;
@@ -29,9 +28,6 @@ button { color: inherit; font: inherit; }
   --human-tip-y: 0px;
   --divine-tip-x: 0px;
   --divine-tip-y: 0px;
-  --title-tracking: .08em;
-  --title-glow: 0px;
-  --title-glow-alpha: 0;
   position: relative;
   width: 100%;
   min-height: 100svh;
@@ -40,11 +36,9 @@ button { color: inherit; font: inherit; }
   isolation: isolate;
   background: var(--paper);
 }
-.minimal-creation::after { content: ""; position: absolute; z-index: 5; inset: 0; pointer-events: none; background: radial-gradient(circle at center,transparent 60%,rgba(13,19,34,.075) 100%); }
 
 .paper-grain { position: absolute; z-index: 12; inset: 0; opacity: .11; pointer-events: none; mix-blend-mode: multiply; background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 180 180' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.82' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.18'/%3E%3C/svg%3E"); }
 .dot-field { position: absolute; z-index: 1; inset: 5% 3%; opacity: .19; pointer-events: none; background-image: radial-gradient(circle,#9eafbe .8px,transparent 1px); background-size: 31px 31px; mask-image: radial-gradient(ellipse at center,black 20%,transparent 78%); }
-.ambient-effects-canvas { position: absolute; z-index: 1; inset: 0; width: 100%; height: 100%; pointer-events: none; mix-blend-mode: multiply; }
 .fingertip-particles { position: absolute; z-index: 4; inset: 0; pointer-events: none; opacity: 0; }
 .fingertip-particles canvas { width: 100%; height: 100%; display: block; }
 .hands { position: absolute; z-index: 2; inset: 0; opacity: 0; }
@@ -61,12 +55,8 @@ button { color: inherit; font: inherit; }
 .hands::after { content: ""; position: absolute; inset: 0; pointer-events: none; background: linear-gradient(to bottom,rgba(251,246,234,.53),transparent 29%,transparent 76%,rgba(251,246,234,.22)); }
 
 .hero-title { position: fixed; z-index: 7; left: 50%; top: clamp(32px,7vh,72px); width: min(760px,84vw); text-align: center; transform: translateX(-50%); }
-.hero-title h1 { margin: 0; opacity: 0; transform: translateY(-20px); }
-.hero-title p { margin: 12px 0 0; opacity: 0; transform: translateY(-12px); }
-#title-imagine { display: inline-block; color: #0b1120; font-family: "Satoshi",-apple-system,BlinkMacSystemFont,sans-serif; font-size: clamp(44px,4.7vw,67px); font-weight: 900; font-style: normal; line-height: 1; letter-spacing: var(--title-tracking); text-transform: uppercase; transition: letter-spacing .3s ease; }
-#title-imagine span { display: inline-block; color: inherit; text-shadow: 0 0 var(--title-glow) rgba(226,176,67,var(--title-glow-alpha)); transition: color .3s ease,text-shadow .3s ease; will-change: transform,text-shadow; }
-#subtitle { color: #475569; font-family: "Technor",ui-monospace,monospace,sans-serif; font-size: clamp(12px,.98vw,15px); font-weight: 500; font-style: normal; line-height: 1.2; letter-spacing: .18em; text-transform: uppercase; will-change: letter-spacing,opacity; }
-#title-imagine.text-ignited span { color: #020617; text-shadow: 0 0 25px rgba(230,160,0,.45),0 0 50px rgba(255,215,0,.25); }
+.hero-title h1 { margin: 0; color: #0d1322; font-family: "Plus Jakarta Sans", Inter, -apple-system, BlinkMacSystemFont, sans-serif; font-size: clamp(52px,4.7vw,76px); font-weight: 900; line-height: 1; letter-spacing: -.04em; text-transform: uppercase; opacity: 0; transform: translateY(-20px); }
+.hero-title p { margin: 10px 0 0; color: rgba(11,24,53,.58); font-family: "DM Mono", ui-monospace, SFMono-Regular, Menlo, monospace; font-size: clamp(10px,.72vw,12px); font-style: normal; font-weight: 400; line-height: 1.2; letter-spacing: .04em; text-transform: lowercase; opacity: 0; transform: translateY(-12px); }
 
 .team-trigger { position: fixed; z-index: 14; right: clamp(22px,3.2vw,54px); bottom: clamp(24px,4vh,42px); display: flex; align-items: center; padding: 0; border: 0; background: transparent; cursor: pointer; text-align: right; opacity: .48; transition: opacity .3s ease,transform .3s ease; }
 .team-trigger span { color: var(--ink); font: 650 12px/1 var(--display); letter-spacing: .02em; }
@@ -220,6 +210,18 @@ button { color: inherit; font: inherit; }
   .floating-logo { width: 220px; height: 220px; }
 }
 
+/* Keep the supporting line quiet and typographically stable at every size. */
+.hero-title > p { margin-top: 10px; max-width: none; font-size: clamp(10px,.72vw,12px); line-height: 1.2; }
+@media (max-width: 600px) {
+  .hero-title > p { margin-top: 8px; font-size: 10px; }
+}
+@media (max-height: 560px) and (orientation: landscape) {
+  .hero-title > p { margin-top: 4px; font-size: 9px; }
+}
+@media (min-width: 1800px) {
+  .hero-title > p { font-size: 13px; }
+}
+
 @media (hover: none), (pointer: coarse) {
   .team-trigger:hover,.team-trigger:focus-visible { transform: none; }
   .floating-logo:hover .three-logo { transform: none; }
@@ -230,7 +232,6 @@ button { color: inherit; font: inherit; }
   .fingertip-particles,.hands,.hero-title h1,.hero-title p,.floating-logo { opacity: 1; transform: none; }
   .floating-logo { transform: translate(-50%,-50%); }
   .team-particle-transition { display: none; }
-  .ambient-effects-canvas { opacity: .42; }
 }
 
 /* V1 doorway */
