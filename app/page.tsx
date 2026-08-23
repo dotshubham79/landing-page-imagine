@@ -872,7 +872,7 @@ export default function Home() {
   }, [teamOpen]);
 
   function trackPointer(event: PointerEvent<HTMLElement>) {
-    if (!root.current) return;
+    if (!root.current || event.pointerType !== "mouse") return;
     const x = event.clientX / window.innerWidth - .5;
     const y = event.clientY / window.innerHeight - .5;
     root.current.style.setProperty("--left-hand-x", `${x * 7}px`);

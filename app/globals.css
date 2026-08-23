@@ -11,7 +11,7 @@
 }
 
 * { box-sizing: border-box; }
-html, body { width: 100%; min-height: 100%; margin: 0; overflow: hidden; background: var(--paper); }
+html, body { width: 100%; min-height: 100%; min-height: 100dvh; margin: 0; overflow: hidden; background: var(--paper); }
 body { color: var(--ink); -webkit-font-smoothing: antialiased; }
 button { color: inherit; font: inherit; }
 ::selection { color: var(--ink); background: #f3cf79; }
@@ -26,6 +26,7 @@ button { color: inherit; font: inherit; }
   position: relative;
   width: 100%;
   min-height: 100svh;
+  min-height: 100dvh;
   overflow: hidden;
   isolation: isolate;
   background: var(--paper);
@@ -119,6 +120,80 @@ button { color: inherit; font: inherit; }
   .team-roles { margin-top: 18px; }
   .team-roles p { font-size: 13px; }
   .team-manifesto { margin-top: 16px; font-size: 16px; line-height: 1.35; }
+}
+
+@media (min-width: 901px) and (max-width: 1180px) {
+  .hero-title { top: clamp(34px,6vh,58px); width: min(680px,72vw); }
+  .hero-title h1 { font-size: clamp(50px,6vw,68px); }
+  .hero-title p { font-size: clamp(18px,2vw,21px); }
+  .hands { inset: -1.5% -8%; }
+  .floating-logo { width: 184px; height: 184px; }
+  .team-reveal { grid-template-columns: minmax(360px,1.16fr) minmax(300px,.84fr); gap: clamp(34px,4vw,58px); padding-inline: clamp(34px,5vw,64px); }
+  .team-copy h2 { font-size: clamp(38px,4.7vw,50px); }
+}
+
+@media (max-width: 900px) {
+  .minimal-creation { min-height: 100dvh; }
+  .hero-title { top: max(28px,calc(env(safe-area-inset-top) + 20px)); }
+  .hands { top: 14%; left: -25%; width: 150%; height: 74%; }
+  .floating-logo { top: 52%; width: 184px; height: 184px; }
+  .team-trigger { right: max(22px,calc(env(safe-area-inset-right) + 18px)); bottom: max(24px,calc(env(safe-area-inset-bottom) + 18px)); min-width: 44px; min-height: 44px; justify-content: center; }
+  .team-close { top: max(20px,calc(env(safe-area-inset-top) + 14px)); left: max(22px,calc(env(safe-area-inset-left) + 18px)); min-height: 44px; }
+  .team-reveal { overscroll-behavior: contain; -webkit-overflow-scrolling: touch; }
+  .team-portrait { height: 100%; width: auto; max-width: 100%; }
+}
+
+@media (max-width: 600px) {
+  .hero-title { width: min(90vw,430px); }
+  .hero-title h1 { font-size: clamp(38px,12vw,50px); letter-spacing: -.045em; }
+  .hero-title p { max-width: 86vw; margin: 7px auto 0; font-size: clamp(16px,4.7vw,19px); line-height: 1.08; }
+  .hands { top: 19%; left: -45%; width: 190%; height: 66%; }
+  .floating-logo { top: 53%; width: 172px; height: 172px; transform: translate(-50%,-50%) scale(.72); }
+  .team-trigger { right: max(18px,calc(env(safe-area-inset-right) + 14px)); bottom: max(16px,calc(env(safe-area-inset-bottom) + 12px)); }
+  .team-trigger span { font-size: 11px; }
+  .team-reveal { grid-template-rows: minmax(210px,37dvh) auto; min-height: 100dvh; padding-top: max(66px,calc(env(safe-area-inset-top) + 56px)); padding-right: max(16px,env(safe-area-inset-right)); padding-bottom: max(26px,calc(env(safe-area-inset-bottom) + 20px)); padding-left: max(16px,env(safe-area-inset-left)); }
+  .team-copy { width: min(92vw,520px); }
+  .team-copy h2 { font-size: clamp(28px,8.2vw,38px); line-height: 1.04; }
+  .team-roles { gap: 7px; padding-block: 13px; }
+  .team-manifesto { font-size: clamp(15px,4.2vw,17px); }
+}
+
+@media (max-width: 360px) {
+  .hero-title h1 { font-size: 38px; }
+  .hero-title p { font-size: 16px; }
+  .hands { left: -54%; width: 208%; }
+  .floating-logo { transform: translate(-50%,-50%) scale(.64); }
+  .team-reveal { grid-template-rows: 205px auto; gap: 18px; }
+  .team-copy h2 { font-size: 27px; }
+  .team-roles p { font-size: 12px; }
+  .team-manifesto { font-size: 15px; }
+}
+
+@media (max-height: 560px) and (orientation: landscape) {
+  .hero-title { top: max(13px,env(safe-area-inset-top)); }
+  .hero-title h1 { font-size: clamp(34px,7vw,45px); }
+  .hero-title p { margin-top: 4px; font-size: clamp(14px,2.4vw,17px); }
+  .hands { top: 9%; left: -8%; width: 116%; height: 90%; }
+  .floating-logo { top: 57%; transform: translate(-50%,-50%) scale(.68); }
+  .team-trigger { bottom: max(10px,env(safe-area-inset-bottom)); }
+  .team-reveal { grid-template-columns: minmax(280px,1fr) minmax(280px,.9fr); grid-template-rows: 1fr; align-content: center; gap: 30px; overflow-y: auto; padding: max(54px,calc(env(safe-area-inset-top) + 48px)) max(24px,env(safe-area-inset-right)) max(20px,env(safe-area-inset-bottom)) max(24px,env(safe-area-inset-left)); }
+  .team-portrait { justify-self: end; height: min(72dvh,390px); width: auto; }
+  .team-copy { justify-self: start; width: min(100%,480px); text-align: left; }
+  .team-copy h2 { margin: 0; font-size: clamp(28px,4.3vw,42px); }
+  .team-roles { margin-top: 16px; padding-block: 11px; }
+  .team-manifesto { margin: 14px 0 0; font-size: 15px; }
+}
+
+@media (min-width: 1800px) {
+  .hero-title { top: 7.5vh; }
+  .hero-title h1 { font-size: 82px; }
+  .hero-title p { font-size: 23px; }
+  .floating-logo { width: 220px; height: 220px; }
+}
+
+@media (hover: none), (pointer: coarse) {
+  .team-trigger:hover,.team-trigger:focus-visible { transform: none; }
+  .floating-logo:hover .three-logo { transform: none; }
 }
 
 @media (prefers-reduced-motion: reduce) {
