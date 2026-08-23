@@ -1,3 +1,4 @@
+@import url("https://api.fontshare.com/v2/css?f[]=satoshi@400,500,600,700&display=swap");
 @import url("https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,200..800&family=Cinzel:wght@900&family=DM+Mono:wght@300;400&family=Instrument+Serif&family=Playfair+Display:ital,wght@1,400&family=Plus+Jakarta+Sans:wght@900&display=swap");
 
 :root {
@@ -222,6 +223,130 @@ button { color: inherit; font: inherit; }
   .hero-title > p { font-size: 13px; }
 }
 
+/* Team — the photograph arrives, and the canvas turns it into language. */
+.team-reveal {
+  position: fixed;
+  z-index: 20;
+  inset: 0;
+  display: block;
+  min-height: 100svh;
+  min-height: 100dvh;
+  overflow: hidden;
+  padding: 0;
+  visibility: hidden;
+  opacity: 0;
+  background: #f8f6f0;
+  color: #0b1835;
+  font-family: "Satoshi", -apple-system, BlinkMacSystemFont, sans-serif;
+  isolation: isolate;
+}
+.team-reveal button,.team-reveal p,.team-reveal h2,.team-reveal span,.team-reveal strong { font-family: inherit; }
+.team-formation-canvas { position: fixed; z-index: 3; inset: 0; display: block; pointer-events: none; }
+.team-close {
+  position: absolute;
+  z-index: 8;
+  top: clamp(25px,4vh,42px);
+  left: clamp(24px,3.2vw,50px);
+  padding: 10px 0;
+  border: 0;
+  background: transparent;
+  color: rgba(248,246,240,.78);
+  cursor: pointer;
+  font-size: 11px;
+  font-style: normal;
+  font-weight: 500;
+  line-height: 1;
+  letter-spacing: .11em;
+  text-transform: uppercase;
+  text-shadow: 0 1px 12px rgba(5,12,26,.4);
+  transition: color .25s ease,transform .25s ease;
+}
+.team-close span { display: inline-block; margin-right: 9px; transition: transform .25s ease; }
+.team-close:hover,.team-close:focus-visible { color: #fff; transform: translateX(-2px); }
+.team-close:hover span,.team-close:focus-visible span { transform: translateX(-4px); }
+.team-close:focus-visible { outline: 1px solid rgba(11,24,53,.3); outline-offset: 6px; }
+
+.team-photo-stage {
+  position: absolute;
+  z-index: 1;
+  inset: 0 auto 0 0;
+  width: min(61vw,1040px);
+  min-width: 660px;
+  overflow: hidden;
+  clip-path: inset(0 0 0 0);
+  -webkit-mask-image: linear-gradient(90deg,#000 0%,#000 87%,rgba(0,0,0,.86) 91%,transparent 100%);
+  mask-image: linear-gradient(90deg,#000 0%,#000 87%,rgba(0,0,0,.86) 91%,transparent 100%);
+  will-change: transform,clip-path,filter,opacity;
+}
+.team-photo-image { position: absolute; inset: -2px; width: calc(100% + 4px); height: calc(100% + 4px); display: block; object-fit: cover; object-position: 47% center; user-select: none; will-change: transform,opacity,filter; }
+.team-photo-base { z-index: 0; }
+.team-founder-focus { z-index: 1; opacity: 0; filter: saturate(1.09) brightness(1.045) contrast(1.025); transition: opacity .35s ease; }
+.team-founder-focus.is-active { opacity: 1; }
+.team-founder-focus-binayak { clip-path: polygon(2% 25%,29% 24%,35% 40%,34% 65%,29% 97%,0 97%,0 44%); }
+.team-founder-focus-shubham { clip-path: polygon(37% 24%,57% 22%,84% 31%,78% 48%,95% 68%,88% 89%,45% 71%,34% 46%); }
+.team-photo-light { position: absolute; z-index: 2; top: 8%; right: -4%; width: 23%; height: 84%; opacity: .7; pointer-events: none; background: radial-gradient(ellipse at right,rgba(239,196,118,.22),rgba(248,246,240,.12) 38%,transparent 72%); filter: blur(12px); mix-blend-mode: screen; }
+.team-photo-fragments { position: absolute; z-index: 2; top: 20%; right: 1.5%; width: 12%; height: 62%; opacity: .38; pointer-events: none; background-image: radial-gradient(circle,rgba(11,24,53,.55) 0 1px,transparent 1.4px),radial-gradient(circle,rgba(193,139,83,.66) 0 1.1px,transparent 1.5px),radial-gradient(circle,rgba(248,246,240,.92) 0 1px,transparent 1.4px); background-position: 3px 2px,11px 17px,19px 8px; background-size: 23px 29px,31px 37px,41px 47px; -webkit-mask-image: linear-gradient(90deg,transparent,#000 42%,transparent); mask-image: linear-gradient(90deg,transparent,#000 42%,transparent); }
+
+.founder-hotspot { position: absolute; z-index: 5; inset: 0; width: 100%; height: 100%; padding: 0; border: 0; background: transparent; color: transparent; touch-action: pan-y; }
+.founder-hotspot-binayak { clip-path: polygon(2% 25%,29% 24%,35% 40%,34% 65%,29% 97%,0 97%,0 44%); }
+.founder-hotspot-shubham { clip-path: polygon(37% 24%,57% 22%,84% 31%,78% 48%,95% 68%,88% 89%,45% 71%,34% 46%); }
+.founder-hotspot:focus-visible { outline: 1px solid rgba(248,246,240,.86); outline-offset: -4px; }
+.founder-cursor-label { position: fixed; z-index: 9; left: 0; top: 0; display: flex; align-items: center; gap: 8px; opacity: 0; pointer-events: none; color: #0b1835; font-size: 13px; font-weight: 500; letter-spacing: .01em; white-space: nowrap; will-change: transform,opacity; }
+.founder-cursor-label > span { width: 4px; height: 4px; border-radius: 50%; background: #c18b53; box-shadow: 0 0 0 3px rgba(193,139,83,.12); }
+
+.team-copy { position: absolute; z-index: 4; top: 50%; right: clamp(34px,6.2vw,112px); width: min(39vw,590px); color: #0b1835; text-align: left; transform: translateY(-50%); }
+.team-label { display: block; margin: 0 0 clamp(20px,3vh,30px); color: rgba(11,24,53,.52); font-size: 11px; font-style: normal; font-weight: 500; line-height: 1; letter-spacing: .17em; text-transform: uppercase; opacity: 0; }
+.team-headline { max-width: 590px; margin: 0; color: #0b1835; font-size: clamp(37px,3.45vw,58px); font-style: normal; font-weight: 600; line-height: 1.055; letter-spacing: -.038em; text-wrap: balance; opacity: 0; transition: color .35s ease; }
+.team-headline span { display: block; }
+.team-founders { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: clamp(22px,3vw,42px); margin: clamp(34px,4.8vh,52px) 0 0; opacity: 0; transition: color .35s ease; }
+.team-founder strong { display: block; margin-bottom: 6px; color: #0b1835; font-size: clamp(16px,1.15vw,19px); font-style: normal; font-weight: 700; line-height: 1.15; }
+.team-founder p { max-width: 230px; margin: 0; color: rgba(11,24,53,.62); font-size: clamp(13px,.92vw,15px); font-style: normal; font-weight: 400; line-height: 1.42; }
+.team-closing { max-width: 520px; margin: clamp(30px,4.2vh,46px) 0 0; color: rgba(11,24,53,.76); font-size: clamp(15px,1.08vw,18px); font-style: normal; font-weight: 500; line-height: 1.45; text-wrap: pretty; opacity: 0; transition: color .35s ease; }
+.team-headline:hover,.team-founders:hover,.team-closing:hover { color: #061126; }
+
+@media (hover: hover) and (pointer: fine) {
+  .founder-hotspot { cursor: none; }
+}
+
+@media (max-width: 1100px) and (min-width: 901px) {
+  .team-photo-stage { width: 59vw; min-width: 570px; }
+  .team-copy { right: 34px; width: 42vw; }
+  .team-headline { font-size: clamp(34px,4vw,46px); }
+  .team-founders { gap: 20px; }
+}
+
+@media (max-width: 900px) {
+  .team-reveal { display: block; min-height: 100dvh; overflow-x: hidden; overflow-y: auto; overscroll-behavior: contain; -webkit-overflow-scrolling: touch; }
+  .team-close { position: fixed; top: max(16px,calc(env(safe-area-inset-top) + 8px)); left: max(18px,calc(env(safe-area-inset-left) + 10px)); min-height: 44px; color: rgba(248,246,240,.82); text-shadow: 0 1px 12px rgba(5,12,26,.38); }
+  .team-close:hover,.team-close:focus-visible { color: #fff; }
+  .team-photo-stage { position: relative; inset: auto; width: 100%; min-width: 0; height: auto; aspect-ratio: 4/3; -webkit-mask-image: linear-gradient(180deg,#000 0%,#000 89%,rgba(0,0,0,.78) 94%,transparent 100%); mask-image: linear-gradient(180deg,#000 0%,#000 89%,rgba(0,0,0,.78) 94%,transparent 100%); }
+  .team-photo-image { object-fit: cover; object-position: center; }
+  .team-photo-light { top: auto; right: 5%; bottom: -8%; width: 90%; height: 22%; background: radial-gradient(ellipse at bottom,rgba(239,196,118,.2),transparent 72%); }
+  .team-photo-fragments { top: auto; right: 10%; bottom: 0; width: 80%; height: 11%; -webkit-mask-image: linear-gradient(180deg,transparent,#000 45%,transparent); mask-image: linear-gradient(180deg,transparent,#000 45%,transparent); }
+  .team-copy { position: relative; top: auto; right: auto; width: min(100%,680px); margin: -1px auto 0; padding: clamp(22px,5.5vw,36px) max(22px,6vw) max(48px,calc(env(safe-area-inset-bottom) + 34px)); transform: none; }
+  .team-label { margin-bottom: 18px; font-size: 10px; }
+  .team-headline { max-width: 640px; font-size: clamp(29px,8.2vw,43px); line-height: 1.06; }
+  .team-founders { gap: 20px; margin-top: 30px; }
+  .team-founder p { max-width: 250px; font-size: 13px; }
+  .team-closing { margin-top: 30px; font-size: 15px; }
+}
+
+@media (max-width: 520px) {
+  .team-founders { grid-template-columns: 1fr; gap: 18px; }
+  .team-headline { font-size: clamp(29px,8.7vw,38px); }
+}
+
+@media (max-height: 560px) and (orientation: landscape) and (min-width: 700px) {
+  .team-reveal { overflow: hidden; }
+  .team-photo-stage { position: absolute; inset: 0 auto 0 0; width: 58vw; height: 100%; aspect-ratio: auto; -webkit-mask-image: linear-gradient(90deg,#000 0%,#000 87%,transparent 100%); mask-image: linear-gradient(90deg,#000 0%,#000 87%,transparent 100%); }
+  .team-copy { position: absolute; top: 50%; right: 26px; width: 45vw; margin: 0; padding: 0; transform: translateY(-50%); }
+  .team-label { margin-bottom: 10px; }
+  .team-headline { font-size: clamp(25px,4vw,36px); }
+  .team-founders { grid-template-columns: repeat(2,minmax(0,1fr)); gap: 15px; margin-top: 18px; }
+  .team-founder p { font-size: 11px; }
+  .team-closing { margin-top: 16px; font-size: 12px; }
+}
+
 @media (hover: none), (pointer: coarse) {
   .team-trigger:hover,.team-trigger:focus-visible { transform: none; }
   .floating-logo:hover .three-logo { transform: none; }
@@ -231,7 +356,8 @@ button { color: inherit; font: inherit; }
   *,*::before,*::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
   .fingertip-particles,.hands,.hero-title h1,.hero-title p,.floating-logo { opacity: 1; transform: none; }
   .floating-logo { transform: translate(-50%,-50%); }
-  .team-particle-transition { display: none; }
+  .team-formation-canvas { display: none; }
+  .team-photo-stage,.team-label,.team-headline,.team-founders,.team-closing,.team-close { opacity: 1; transform: none; filter: none; clip-path: none; }
 }
 
 /* V1 doorway */
