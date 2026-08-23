@@ -31,29 +31,31 @@ test("server-renders the IMAGINE landing and semantic team content", async () =>
   const html = await response.text();
   assert.match(html, /<title>IMAGINE — Where imagination becomes intelligence<\/title>/i);
   assert.match(html, /<h1>IMAGINE<\/h1>/);
-  assert.match(html, /where imagination meets intelligence\./);
+  assert.match(html, /Where imagination meets intelligence\./);
   assert.match(html, /The people making IMAGINE possible/);
-  assert.match(html, /Binayak and Shubham arriving together in a golf cart/);
-  assert.match(html, /Two brothers building/);
-  assert.match(html, /Creative direction, product, and vision\./);
-  assert.match(html, /Engineering, systems, and intelligence\./);
+  assert.match(html, /Two brothers\. One new way to interact with intelligence\./);
+  assert.match(html, /Shubham.*creative force behind Imagine/s);
+  assert.match(html, /Binayak.*engineering force behind the engine/s);
   assert.doesNotMatch(html, /codex-preview|Your site is taking shape|react-loading-skeleton/i);
 });
 
-test("keeps the cinematic team experience accessible and starter-free", async () => {
+test("keeps the editorial team slideshow accessible, clean, and starter-free", async () => {
   const [page, css, packageJson] = await Promise.all([
     readFile(new URL("../app/page.tsx", import.meta.url), "utf8"),
     readFile(new URL("../app/globals.css", import.meta.url), "utf8"),
     readFile(new URL("../package.json", import.meta.url), "utf8"),
   ]);
 
-  assert.match(page, /function TeamFormationParticles/);
-  assert.match(page, /className="founder-hotspot founder-hotspot-binayak"/);
-  assert.match(page, /className="founder-hotspot founder-hotspot-shubham"/);
-  assert.match(page, /prefers-reduced-motion: reduce/);
-  assert.match(page, /team:dissolve-label/);
-  assert.match(css, /font-family:\s*"Satoshi"/);
-  assert.match(css, /\.team-formation-canvas[^}]*pointer-events:\s*none/s);
+  assert.match(page, /function TeamParticleTransition/);
+  assert.match(page, /const teamImages = \[/);
+  assert.match(page, /className={`team-slide/);
+  assert.match(page, /aria-label="Show the next photograph"/);
+  assert.doesNotMatch(page, /team-slide-backdrop/);
+  assert.doesNotMatch(page, /clipPath:\s*"circle/);
+  assert.match(css, /\.team-particle-transition[^}]*pointer-events:\s*none/s);
+  assert.match(css, /\.team-manifesto[^}]*Cormorant Garamond/s);
+  assert.match(css, /\.team-roles[^}]*border:\s*0/s);
+  assert.doesNotMatch(css, /\.team-slide-backdrop/);
   assert.match(css, /@media \(max-width:\s*900px\)/);
   assert.doesNotMatch(packageJson, /react-loading-skeleton/);
 
