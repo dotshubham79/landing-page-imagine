@@ -23,6 +23,11 @@ button { color: inherit; font: inherit; }
   --right-hand-y: 0px;
   --logo-x: 0px;
   --logo-y: 0px;
+  --human-reach-rotation: 0deg;
+  --human-tip-x: 0px;
+  --human-tip-y: 0px;
+  --divine-tip-x: 0px;
+  --divine-tip-y: 0px;
   position: relative;
   width: 100%;
   min-height: 100svh;
@@ -42,11 +47,11 @@ button { color: inherit; font: inherit; }
 .hand img { width: 100%; height: 100%; display: block; object-fit: cover; object-position: center; user-select: none; }
 .hand-left { clip-path: polygon(0 0,50.7% 0,50.7% 100%,0 100%); transform-origin: 8% 88%; }
 .hand-right { clip-path: polygon(49.3% 0,100% 0,100% 100%,49.3% 100%); transform-origin: 92% 12%; }
-.hand-left .hand-art { transform: translate(var(--left-hand-x),var(--left-hand-y)) scale(1.025); }
+.hand-left .hand-art { transform: translate(var(--left-hand-x),var(--left-hand-y)) rotate(var(--human-reach-rotation)) scale(1.025); transform-origin: 12% 78%; }
 .hand-right .hand-art { transform: translate(var(--right-hand-x),var(--right-hand-y)) scale(1.025); }
 .fingertip-anchor { position: absolute; width: 2px; height: 2px; pointer-events: none; opacity: 0; }
-.fingertip-human { left: 42.5%; top: 50.5%; }
-.fingertip-divine { left: 56.5%; top: 41.5%; }
+.fingertip-human { left: 42.5%; top: 50.5%; transform: translate(var(--human-tip-x),var(--human-tip-y)); }
+.fingertip-divine { left: 56.5%; top: 41.5%; transform: translate(var(--divine-tip-x),var(--divine-tip-y)); }
 .hands::after { content: ""; position: absolute; inset: 0; pointer-events: none; background: linear-gradient(to bottom,rgba(251,246,234,.53),transparent 29%,transparent 76%,rgba(251,246,234,.22)); }
 
 .hero-title { position: fixed; z-index: 7; left: 50%; top: clamp(32px,7vh,72px); width: min(760px,84vw); text-align: center; transform: translateX(-50%); }
@@ -62,8 +67,22 @@ button { color: inherit; font: inherit; }
 .logo-aura { position: absolute; z-index: 0; inset: 1%; border-radius: 44%; pointer-events: none; opacity: 0; transform: scale(.72); background: radial-gradient(circle,rgba(255,252,224,1) 0,rgba(255,198,55,.72) 32%,rgba(255,161,21,.3) 57%,transparent 79%); filter: blur(18px); box-shadow: 0 0 54px rgba(244,166,31,.68),0 0 112px rgba(255,202,70,.38),0 0 164px rgba(255,218,115,.2); }
 .three-logo { position: relative; z-index: 1; width: 100%; height: 100%; transition: transform .35s cubic-bezier(.16,1,.3,1),filter .3s ease; filter: drop-shadow(0 18px 22px rgba(164,102,4,.25)) drop-shadow(0 0 16px rgba(255,188,42,.42)); }
 .three-logo canvas { width: 100%; height: 100%; display: block; }
-.floating-logo:hover .three-logo,.floating-logo:focus-visible .three-logo { transform: translateY(-6px) scale(1.08); filter: drop-shadow(0 24px 28px rgba(164,102,4,.28)) drop-shadow(0 0 24px rgba(255,178,26,.62)) brightness(1.08); }
+.floating-logo:hover .three-logo,.floating-logo:focus-visible .three-logo { transform: translateY(-2px) scale(1.025); filter: drop-shadow(0 21px 25px rgba(164,102,4,.27)) drop-shadow(0 0 19px rgba(255,178,26,.5)) brightness(1.035); }
 .floating-logo:focus-visible { outline: 1px solid rgba(11,24,53,.65); outline-offset: 5px; }
+
+.connection-feedback { position: fixed; z-index: 6; inset: 0; overflow: hidden; pointer-events: none; }
+.connection-line { position: absolute; left: 0; top: 0; height: 1px; opacity: 0; transform-origin: 0 50%; background: linear-gradient(90deg,transparent,rgba(198,145,45,.58),rgba(255,244,202,.76),transparent); box-shadow: 0 0 7px rgba(207,151,48,.28); transition: opacity .28s ease; will-change: width,transform,opacity; }
+.connection-line-human { background: linear-gradient(90deg,rgba(181,127,35,.08),rgba(211,156,51,.58),rgba(255,244,202,.78)); }
+.connection-line-divine { background: linear-gradient(90deg,rgba(255,244,202,.72),rgba(211,156,51,.42),transparent); }
+.connection-line-cursor { height: .7px; }
+.connection-spark,.connection-ripple,.connection-dust,.connection-hand-light { position: absolute; left: 50%; top: 50%; pointer-events: none; opacity: 0; transform: translate(-50%,-50%); }
+.connection-spark { z-index: 3; width: 18px; height: 18px; border-radius: 50%; background: radial-gradient(circle,#fff 0,#fff5c9 24%,rgba(238,177,57,.86) 48%,transparent 72%); box-shadow: 0 0 12px rgba(255,255,238,.95),0 0 28px rgba(218,157,47,.5); }
+.connection-ripple { z-index: 1; width: 74px; height: 74px; border: 1px solid rgba(197,143,47,.32); border-radius: 50%; box-shadow: inset 0 0 14px rgba(255,243,204,.18),0 0 12px rgba(197,143,47,.12); }
+.connection-dust { z-index: 2; width: 176px; height: 176px; border-radius: 50%; background-image: radial-gradient(circle,rgba(197,143,47,.75) 0 1px,transparent 1.4px),radial-gradient(circle,rgba(255,244,204,.9) 0 1px,transparent 1.5px); background-position: 0 0,9px 11px; background-size: 23px 23px,31px 31px; mask-image: radial-gradient(circle,transparent 9%,#000 24%,transparent 72%); }
+.connection-hand-light { z-index: 0; width: min(72vw,980px); height: min(34vw,390px); border-radius: 50%; background: radial-gradient(ellipse,rgba(255,229,158,.28),rgba(232,180,79,.08) 38%,transparent 72%); filter: blur(10px); }
+.approaching .logo-aura { filter: blur(16px) brightness(1.035); }
+.connecting .floating-logo { pointer-events: none; }
+.connecting .team-trigger { pointer-events: none; }
 
 .team-particle-transition { position: fixed; z-index: 26; inset: 0; pointer-events: none; }
 .team-particle-transition canvas { width: 100%; height: 100%; display: block; }

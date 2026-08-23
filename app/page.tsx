@@ -751,10 +751,10 @@ function ThreeLogo() {
       eased.lerp(pointer, .075);
       mesh.rotation.y += (eased.x * .34 - mesh.rotation.y) * .09;
       mesh.rotation.x += (-eased.y * .28 - mesh.rotation.x) * .09;
-      group.position.y = Math.sin(time * 1.75) * .11;
-      group.rotation.z = Math.sin(time * .75) * .015;
-      key.intensity = 8 + Math.sin(time * 2.6) * 1.5;
-      glow.scale.setScalar(.94 + Math.sin(time * 2.15) * .06);
+      group.position.y = Math.sin(time * .82) * .09;
+      group.rotation.z = Math.sin(time * .68) * .012;
+      key.intensity = 8 + Math.sin(time * .95) * 1.1;
+      glow.scale.setScalar(.96 + Math.sin(time * .85) * .04);
       renderer.render(scene, camera);
       animation = requestAnimationFrame(render);
     };
@@ -783,6 +783,7 @@ export default function Home() {
   const root = useRef<HTMLElement>(null);
   const teamLayer = useRef<HTMLElement>(null);
   const [entering, setEntering] = useState(false);
+  const [connecting, setConnecting] = useState(false);
   const [teamOpen, setTeamOpen] = useState(false);
   const [teamImageIndex, setTeamImageIndex] = useState(0);
 
@@ -808,7 +809,7 @@ export default function Home() {
         .fromTo(".hero-title h1", { opacity: 0, y: -20 }, { opacity: 1, y: 0, duration: .72 }, motion.timeline.headerStart)
         .fromTo(".hero-title p", { opacity: 0, y: -12 }, { opacity: 1, y: 0, duration: .68 }, motion.timeline.headerStart + .12);
 
-      gsap.to(".logo-aura", { opacity: 1, scale: 1.2, duration: 1.55, delay: motion.timeline.complete, repeat: -1, yoyo: true, ease: "sine.inOut" });
+      gsap.to(".logo-aura", { opacity: .92, scale: 1.12, duration: 3.6, delay: motion.timeline.complete, repeat: -1, yoyo: true, ease: "sine.inOut" });
       gsap.to(".hand-left", { xPercent: .42, yPercent: -.24, rotation: .12, duration: 3.5, delay: motion.timeline.handsDuration, repeat: -1, yoyo: true, ease: "sine.inOut" });
       gsap.to(".hand-right", { xPercent: -.42, yPercent: .24, rotation: .12, duration: 3.5, delay: motion.timeline.handsDuration, repeat: -1, yoyo: true, ease: "sine.inOut" });
     }, root);
@@ -871,27 +872,128 @@ export default function Home() {
     return () => window.clearInterval(interval);
   }, [teamOpen]);
 
+  function placeConnectionLines(cursor: { x: number; y: number }, approach: number) {
+    if (!root.current) return;
+    const logo = root.current.querySelector<HTMLElement>(".floating-logo");
+    const humanTip = root.current.querySelector<HTMLElement>("[data-fingertip='human']");
+    const divineTip = root.current.querySelector<HTMLElement>("[data-fingertip='divine']");
+    if (!logo || !humanTip || !divineTip) return;
+    const center = (node: HTMLElement) => {
+      const bounds = node.getBoundingClientRect();
+      return { x: bounds.left + bounds.width / 2, y: bounds.top + bounds.height / 2 };
+    };
+    const logoCenter = center(logo);
+    const placeLine = (selector: string, start: { x: number; y: number }, end: { x: number; y: number }, opacity: number) => {
+      const line = root.current?.querySelector<HTMLElement>(selector);
+      if (!line) return;
+      const deltaX = end.x - start.x;
+      const deltaY = end.y - start.y;
+      line.style.width = `${Math.hypot(deltaX, deltaY)}px`;
+      line.style.opacity = `${opacity}`;
+      line.style.transform = `translate3d(${start.x}px,${start.y}px,0) rotate(${Math.atan2(deltaY, deltaX)}rad)`;
+    };
+    placeLine(".connection-line-human", center(humanTip), cursor, approach * .42);
+    placeLine(".connection-line-cursor", cursor, logoCenter, approach * .32);
+    placeLine(".connection-line-divine", center(divineTip), logoCenter, approach * .22);
+  }
+
   function trackPointer(event: PointerEvent<HTMLElement>) {
-    if (!root.current || event.pointerType !== "mouse") return;
+    if (!root.current || event.pointerType !== "mouse" || teamOpen || connecting || entering) return;
+    const logo = root.current.querySelector<HTMLElement>(".floating-logo");
+    if (!logo) return;
+
+    const logoBounds = logo.getBoundingClientRect();
+    const logoCenter = {
+      x: logoBounds.left + logoBounds.width / 2,
+      y: logoBounds.top + logoBounds.height / 2,
+    };
+    const distanceX = event.clientX - logoCenter.x;
+    const distanceY = event.clientY - logoCenter.y;
+    const magneticRadius = Math.min(380, Math.max(250, window.innerWidth * .24));
+    const distance = Math.hypot(distanceX, distanceY);
+    const approach = Math.max(0, Math.min(1, 1 - distance / magneticRadius));
     const x = event.clientX / window.innerWidth - .5;
     const y = event.clientY / window.innerHeight - .5;
-    root.current.style.setProperty("--left-hand-x", `${x * 7}px`);
-    root.current.style.setProperty("--left-hand-y", `${y * 5}px`);
-    root.current.style.setProperty("--right-hand-x", `${x * -6}px`);
-    root.current.style.setProperty("--right-hand-y", `${y * -4}px`);
-    root.current.style.setProperty("--logo-x", `${x * 13}px`);
-    root.current.style.setProperty("--logo-y", `${y * 10}px`);
+    root.current.style.setProperty("--left-hand-x", `${x * 3 + approach * 11}px`);
+    root.current.style.setProperty("--left-hand-y", `${y * 2 - approach * 3.5}px`);
+    root.current.style.setProperty("--right-hand-x", `${x * -1.4}px`);
+    root.current.style.setProperty("--right-hand-y", `${y * -.9}px`);
+    root.current.style.setProperty("--human-reach-rotation", `${approach * -.55}deg`);
+    root.current.style.setProperty("--human-tip-x", `${approach * 4.5}px`);
+    root.current.style.setProperty("--human-tip-y", `${approach * -1.8}px`);
+    root.current.style.setProperty("--logo-x", `${distanceX * .028 * approach}px`);
+    root.current.style.setProperty("--logo-y", `${distanceY * .028 * approach}px`);
+    root.current.classList.toggle("approaching", approach > .035);
+
+    const cursor = { x: event.clientX, y: event.clientY };
+    placeConnectionLines(cursor, approach);
   }
 
   function enterV1() {
-    if (entering || teamOpen) return;
-    gsap.to(".three-logo", { scale: motion.logo.clickScale, duration: .15, repeat: 1, yoyo: true, ease: "power2.inOut" });
-    window.setTimeout(() => setEntering(true), 310);
-    window.setTimeout(() => window.location.assign("https://imagine-lab.tech"), 980);
+    if (connecting || entering || teamOpen || !root.current) return;
+    setConnecting(true);
+    root.current.classList.remove("approaching");
+    const logoBounds = root.current.querySelector<HTMLElement>(".floating-logo")?.getBoundingClientRect();
+    if (logoBounds) {
+      placeConnectionLines({ x: logoBounds.left + logoBounds.width / 2, y: logoBounds.top + logoBounds.height / 2 }, 1);
+    }
+    const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    if (reduceMotion) {
+      setEntering(true);
+      window.setTimeout(() => window.location.assign("https://imagine-lab.tech"), 560);
+      return;
+    }
+
+    gsap.timeline({ defaults: { ease: "power2.inOut" } })
+      .to(root.current, {
+        "--left-hand-x": "15px",
+        "--left-hand-y": "-5px",
+        "--human-reach-rotation": "-.72deg",
+        "--human-tip-x": "6px",
+        "--human-tip-y": "-2.8px",
+        duration: .34,
+      }, 0)
+      .to(root.current, {
+        "--right-hand-x": "-4px",
+        "--right-hand-y": "2px",
+        "--divine-tip-x": "-2.5px",
+        "--divine-tip-y": "1px",
+        duration: .32,
+      }, .04)
+      .to(".three-logo", { scale: .965, duration: .18, ease: "power2.out" }, 0)
+      .to([".connection-line-human", ".connection-line-divine", ".connection-line-cursor"], { opacity: .72, duration: .28 }, 0)
+      .to(".three-logo", { scale: 1, duration: .22, clearProps: "transform" }, .34)
+      .fromTo(".connection-spark", { opacity: 0, scale: .2 }, { opacity: 1, scale: 1, duration: .24, ease: "back.out(1.8)" }, .52)
+      .fromTo(".connection-dust", { opacity: 0, scale: .5, rotation: -8 }, { opacity: .78, scale: 1.08, rotation: 5, duration: .42 }, .56)
+      .fromTo(".connection-ripple", { opacity: .55, scale: .25 }, { opacity: 0, scale: 18, duration: .78, ease: "power2.out" }, .58)
+      .fromTo(".connection-hand-light", { opacity: 0, scale: .7 }, { opacity: .46, scale: 1.35, duration: .42, yoyo: true, repeat: 1 }, .62)
+      .to(".connection-spark", { opacity: 0, scale: 1.45, duration: .38 }, .8)
+      .to(".connection-dust", { opacity: 0, scale: 1.28, duration: .4 }, .86)
+      .to([".connection-line-human", ".connection-line-divine", ".connection-line-cursor"], { opacity: 0, duration: .32 }, .92)
+      .call(() => setEntering(true), [], 1.04)
+      .call(() => window.location.assign("https://imagine-lab.tech"), [], 1.84);
+  }
+
+  function resetConnection() {
+    if (!root.current || connecting || entering) return;
+    root.current.classList.remove("approaching");
+    root.current.style.setProperty("--human-reach-rotation", "0deg");
+    root.current.style.setProperty("--human-tip-x", "0px");
+    root.current.style.setProperty("--human-tip-y", "0px");
+    root.current.style.setProperty("--left-hand-x", "0px");
+    root.current.style.setProperty("--left-hand-y", "0px");
+    root.current.style.setProperty("--right-hand-x", "0px");
+    root.current.style.setProperty("--right-hand-y", "0px");
+    root.current.style.setProperty("--logo-x", "0px");
+    root.current.style.setProperty("--logo-y", "0px");
+    root.current.querySelectorAll<HTMLElement>(".connection-line").forEach((line) => {
+      line.style.opacity = "0";
+    });
   }
 
   function openTeam() {
-    if (teamOpen || entering) return;
+    if (teamOpen || entering || connecting) return;
+    resetConnection();
     setTeamOpen(true);
   }
 
@@ -920,7 +1022,7 @@ export default function Home() {
   }
 
   return (
-    <main ref={root} className={`minimal-creation ${entering ? "entering" : ""}`} onPointerMove={trackPointer}>
+    <main ref={root} className={`minimal-creation ${connecting ? "connecting" : ""} ${entering ? "entering" : ""}`} onPointerMove={trackPointer} onPointerLeave={resetConnection}>
       <div className="paper-grain" aria-hidden="true" />
       <div className="dot-field" aria-hidden="true" />
       <FingertipParticles />
@@ -944,12 +1046,29 @@ export default function Home() {
         </div>
       </div>
 
+      <div className="connection-feedback" aria-hidden="true">
+        <span className="connection-line connection-line-human" />
+        <span className="connection-line connection-line-divine" />
+        <span className="connection-line connection-line-cursor" />
+        <span className="connection-hand-light" />
+        <span className="connection-ripple" />
+        <span className="connection-dust" />
+        <span className="connection-spark" />
+      </div>
+
       <header className="hero-title">
         <h1>IMAGINE</h1>
         <p>Where imagination meets intelligence.</p>
       </header>
 
-      <button className="floating-logo" type="button" onClick={enterV1} aria-label="Enter IMAGINE V1">
+      <button className="floating-logo" type="button" onPointerDown={(event) => {
+        if (event.button === 0) enterV1();
+      }} onKeyDown={(event) => {
+        if (event.key === "Enter" || event.key === " ") {
+          event.preventDefault();
+          enterV1();
+        }
+      }} aria-label="Complete the connection and enter IMAGINE">
         <span className="logo-aura" aria-hidden="true" />
         <ThreeLogo />
       </button>
