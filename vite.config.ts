@@ -41,19 +41,25 @@ export default defineConfig(async () => {
   process.env.MINIFLARE_REGISTRY_PATH ??= ".wrangler/registry";
 
   // Wrangler snapshots its log path while the Cloudflare plugin is imported.
-  const { cloudflare } = await import("@cloudflare/vite-plugin");
+  const localPreview = process.env.IMAGINE_LOCAL_PREVIEW === "1";
+  const cloudflarePlugin = localPreview
+    ? null
+    : (await import("@cloudflare/vite-plugin")).cloudflare({
+        viteEnvironment: { name: "rsc", childEnvironments: ["ssr"] },
+        config: localBindingConfig,
+      });
 
   return {
-    server: isCodexSeatbeltSandbox
-      ? { watch: { useFsEvents: false, usePolling: true } }
-      : undefined,
+    server: {
+      watch: {
+        ...(isCodexSeatbeltSandbox ? { useFsEvents: false, usePolling: true } : {}),
+        ignored: ["**/node_modules.dataless-backup/**", "**/dist/**"],
+      },
+    },
     plugins: [
       vinext(),
       sites(),
-      cloudflare({
-        viteEnvironment: { name: "rsc", childEnvironments: ["ssr"] },
-        config: localBindingConfig,
-      }),
+      ...(cloudflarePlugin ? [cloudflarePlugin] : []),
     ],
   };
 });

@@ -1,34 +1,24 @@
 import type { Metadata } from "next";
-import { headers } from "next/headers";
 import "./globals.css";
 
-export async function generateMetadata(): Promise<Metadata> {
-  const requestHeaders = await headers();
-  const host = requestHeaders.get("x-forwarded-host") ?? requestHeaders.get("host") ?? "localhost:3000";
-  const protocol = requestHeaders.get("x-forwarded-proto") ?? (host.startsWith("localhost") ? "http" : "https");
-  const origin = `${protocol}://${host}`;
-
-  return {
-    title: "IMAGINE — Where imagination becomes intelligence",
-    description: "A new creative interface where human imagination becomes intelligence.",
-    applicationName: "IMAGINE",
-    metadataBase: new URL(origin),
-    keywords: ["IMAGINE", "real-time creation", "persistent objects", "creative intelligence"],
-    openGraph: {
-      title: "IMAGINE — Where imagination becomes intelligence",
-      description: "A new creative interface where human imagination becomes intelligence.",
-      type: "website",
-      url: origin,
-      images: [{ url: `${origin}/og.png`, width: 1672, height: 941, alt: "IMAGINE — Where imagination becomes intelligence." }],
-    },
-    twitter: {
-      card: "summary_large_image",
-      title: "IMAGINE — Where imagination becomes intelligence",
-      description: "A new creative interface where human imagination becomes intelligence.",
-      images: [`${origin}/og.png`],
-    },
-  };
-}
+export const metadata: Metadata = {
+  title: "IMAGINE — A creative interface for intelligence",
+  description: "Your thoughts become worlds you can see, shape, question, and continue.",
+  applicationName: "IMAGINE",
+  keywords: ["IMAGINE", "creative intelligence", "persistent worlds", "interactive learning"],
+  openGraph: {
+    title: "IMAGINE — A creative interface for intelligence",
+    description: "Your thoughts become worlds you can see, shape, question, and continue.",
+    type: "website",
+    images: [{ url: "/og.png", width: 1672, height: 941, alt: "IMAGINE — A creative interface for intelligence." }],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "IMAGINE — A creative interface for intelligence",
+    description: "Your thoughts become worlds you can see, shape, question, and continue.",
+    images: ["/og.png"],
+  },
+};
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
