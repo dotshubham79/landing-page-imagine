@@ -58,7 +58,9 @@ export default defineConfig(async () => {
     },
     plugins: [
       vinext(),
-      sites(),
+      // The Sites runtime owns hosted builds; local previews do not need its
+      // deployment bridge and can stay responsive without it.
+      ...(localPreview ? [] : [sites()]),
       ...(cloudflarePlugin ? [cloudflarePlugin] : []),
     ],
   };
