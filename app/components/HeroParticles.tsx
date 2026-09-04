@@ -73,7 +73,7 @@ export function HeroParticles() {
       context.fillRect(0, 0, 64, 64);
     }
     const texture = new THREE.CanvasTexture(sprite);
-    const material = new THREE.PointsMaterial({ size: 0.027, map: texture, vertexColors: true, transparent: true, opacity: 0.42, alphaTest: 0.02, depthWrite: false, sizeAttenuation: true, blending: THREE.AdditiveBlending });
+    const material = new THREE.PointsMaterial({ size: 0.021, map: texture, vertexColors: true, transparent: true, opacity: 0.26, alphaTest: 0.02, depthWrite: false, sizeAttenuation: true, blending: THREE.AdditiveBlending });
     const particles = new THREE.Points(geometry, material);
     particles.frustumCulled = false;
     scene.add(particles);

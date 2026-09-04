@@ -144,7 +144,6 @@ export function Hero() {
         </button>
 
         <div className="hero-scroll-cue" aria-hidden="true">
-          <span>where imagination meets intelligence</span>
           <i />
         </div>
 

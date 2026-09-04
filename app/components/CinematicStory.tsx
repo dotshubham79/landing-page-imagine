@@ -23,9 +23,10 @@ export function CinematicStory() {
       renderedProgress = reducedMotion ? targetProgress : renderedProgress + (targetProgress - renderedProgress) * 0.075;
       const progress = clamp(renderedProgress);
       const chapter = progress < 0.2 ? "0" : progress < 0.6 ? "1" : "2";
-      const lightWorld = between(progress, 0.18, 0.31);
-      const blueReturn = between(progress, 0.72, 0.95);
-      const textBluePhase = lightWorld * (1 - blueReturn);
+      // The story remains inside the same blue world; only the hands and copy evolve.
+      const lightWorld = 0;
+      const blueReturn = 0;
+      const textBluePhase = 0;
       const textRed = Math.round(lerp(248, 46, textBluePhase));
       const textGreen = Math.round(lerp(243, 99, textBluePhase));
       const textBlue = Math.round(lerp(232, 152, textBluePhase));

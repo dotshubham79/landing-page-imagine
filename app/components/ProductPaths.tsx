@@ -7,12 +7,12 @@ export function ProductPaths() {
   const gatewayRef = useRef<HTMLElement>(null);
   const [chooserOpen, setChooserOpen] = useState(false);
   const roles = [
-    { name: "student", art: "student" },
-    { name: "educator", art: "educator" },
-    { name: "filmmaker", art: "filmmaker" },
-    { name: "creator", art: "creator" },
-    { name: "developer", art: "developer" },
-    { name: "just imaginative", art: "imaginative" },
+    { name: "student", art: "student", src: "/identity-student-v1.png" },
+    { name: "educator", art: "educator", src: "/identity-educator-v2.png" },
+    { name: "filmmaker", art: "filmmaker", src: "/identity-filmmaker-v2.png" },
+    { name: "creator", art: "creator", src: "/identity-creator-v2.png" },
+    { name: "developer", art: "developer", src: "/identity-developer-v2.png" },
+    { name: "just imaginative", art: "imaginative", src: "/identity-imaginative-v2.png" },
   ];
 
   const moveLogo = (event: ReactPointerEvent<HTMLElement>) => {
@@ -57,17 +57,16 @@ export function ProductPaths() {
           <span className="gateway-logo-aura" aria-hidden="true" />
           <img src="/imagine-logo-center-v5.png" alt="" />
         </button>
-        <section className={`identity-chooser ${chooserOpen ? "is-open" : ""}`} aria-hidden={!chooserOpen} aria-label="Choose how you imagine">
+        <section className={`identity-chooser ${chooserOpen ? "is-open" : ""}`} aria-hidden={!chooserOpen} aria-label="Choose how you imagine. Click anywhere to enter IMAGINE." onClick={chooseRole}>
           <div className="identity-flash" aria-hidden="true" />
           <div className="identity-rings" aria-hidden="true"><i /><i /><i /></div>
-          <button className="identity-close" type="button" onClick={() => setChooserOpen(false)} aria-label="Return to the IMAGINE invitation">return</button>
           <div className="identity-content">
-            <span className="identity-spark" aria-hidden="true">✦</span>
+            <img className="identity-mark" src="/imagine-logo-center-v5.png" alt="IMAGINE" />
             <p>who are you today?</p>
             <div className="identity-options">
               {roles.map((role, index) => (
                 <button key={role.name} type="button" onClick={chooseRole} style={{ "--role-index": index } as CSSProperties}>
-                  <i className={`identity-art identity-art--${role.art}`} aria-hidden="true" />
+                  <img className={`identity-art identity-art--${role.art}`} src={role.src} alt="" aria-hidden="true" />
                   <span>{role.name}</span>
                 </button>
               ))}
